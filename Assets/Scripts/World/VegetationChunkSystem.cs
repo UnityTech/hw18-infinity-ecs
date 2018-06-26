@@ -13,6 +13,8 @@ namespace Unity.InfiniteWorld
         struct ChunkGroup
         {
             [ReadOnly]
+            public EntityArray entities;
+            [ReadOnly]
             public ComponentDataArray<Sector> sectors;
             [ReadOnly]
             public ComponentDataArray<TerrainChunkHasHeightmap> lods;
@@ -28,13 +30,16 @@ namespace Unity.InfiniteWorld
 
         RandomProvider randomGen = new RandomProvider(12345);
         EntityArchetype vegetationArchetype;
+        Mesh testMesh;
+        Material testMaterial;
 
         protected override void OnCreateManager(int capacity)
         {
             vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender));
 
-            //prefab = Resources.Load<GameObject>("Art/Tree");
-            //Assert.AreNotEqual(null, prefab);
+            var test = Resources.Load<GameObject>("Art/Test Rock 01");
+            testMesh = test.GetComponent<MeshFilter>().sharedMesh;
+            testMaterial = test.GetComponent<UnityEngine.MeshRenderer>().sharedMaterial;
         }
 
         protected override void OnUpdate()
@@ -44,6 +49,9 @@ namespace Unity.InfiniteWorld
                 // Just create 10 trees in random position inside a sector
                 for (int i = 0; i < 10; ++i)
                     CreateEntity(chunkGroup.sectors[temp]);
+
+                var entity = chunkGroup.entities[temp];
+                PostUpdateCommands.AddComponent(entity, new TerrainChunkHasVegetation());
             }
         }
 
@@ -57,7 +65,7 @@ namespace Unity.InfiniteWorld
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector.value));
             PostUpdateCommands.SetComponent(new Shift(shift));
-            PostUpdateCommands.SetComponent(new MeshRender());
+            PostUpdateCommands.SetSharedComponent(new MeshRender() { mesh = testMesh, material = testMaterial });
         }
     }
 }

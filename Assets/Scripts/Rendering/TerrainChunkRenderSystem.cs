@@ -26,6 +26,8 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Sector> sectors;
             [ReadOnly]
             public ComponentDataArray<Transform> transforms;
+            [ReadOnly]
+            public ComponentDataArray<TerrainChunkHasHeightmap> tags;
         }
 
         [Inject]

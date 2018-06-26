@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace Unity.InfiniteWorld
 {
-    public struct MeshRender : IComponentData
+    public struct MeshRender : ISharedComponentData
     {
         public Mesh mesh;
         public Material material;
     }
 
-    public class MeshRenderComponent : ComponentDataWrapper<MeshRender> { }
+    public class MeshRenderComponent : SharedComponentDataWrapper<MeshRender> { }
 }
