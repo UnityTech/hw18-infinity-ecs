@@ -37,7 +37,7 @@ namespace Unity.InfiniteWorld
         {
             vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender));
 
-            var test = Resources.Load<GameObject>("Art/Test Rock 01");
+            var test = Resources.Load<GameObject>("Art/Tree 01");
             testMesh = test.GetComponent<MeshFilter>().sharedMesh;
             testMaterial = test.GetComponent<UnityEngine.MeshRenderer>().sharedMaterial;
         }
@@ -60,7 +60,7 @@ namespace Unity.InfiniteWorld
             var heightMap = dataSystem.GetChunkHeightmap(sector);
 
             var rand = new uint2(randomGen.Next() % WorldChunkConstants.ChunkSize, randomGen.Next() % WorldChunkConstants.ChunkSize);
-            Vector3 shift = new Vector3(rand.x, heightMap[(int)(rand.y * WorldChunkConstants.ChunkSize + rand.x)], rand.y);
+            Vector3 shift = new Vector3(rand.x, heightMap[(int)(rand.y * WorldChunkConstants.ChunkSize + rand.x)] * 50, rand.y);
 
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector.value));
