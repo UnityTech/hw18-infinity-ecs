@@ -14,6 +14,9 @@ namespace Unity.InfiniteWorld
         {
             public NativeArray<float> Heightmap;
             public Texture2D HeightmapTex;
+
+            public NativeArray<float3> Normalmap;
+            public Texture2D NormalmapTex;
         }
 
         Dictionary<int2, AssetData> m_CPUDataBySector;
@@ -29,6 +32,16 @@ namespace Unity.InfiniteWorld
         public Texture2D GetChunkHeightmapTex(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
+        }
+
+        public NativeArray<float3> GetChunkNormalmap(Sector sector)
+        {
+            return GetOrCreateChunkAssetData(sector).Normalmap;
+        }
+
+        public Texture2D GetChunkNormalmapTex(Sector sector)
+        {
+            return GetOrCreateChunkAssetData(sector).NormalmapTex;
         }
 
         public void DisposeChunkData(Sector sector)
@@ -73,7 +86,19 @@ namespace Unity.InfiniteWorld
                         WorldChunkConstants.ChunkSize,
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
+                    ),
+
+                    Normalmap = new NativeArray<float3>(
+                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
+                        Allocator.Persistent
+                    ),
+                    NormalmapTex = new Texture2D(
+                        WorldChunkConstants.ChunkSize,
+                        WorldChunkConstants.ChunkSize,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32_SFloat,
+                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     )
+
                 };
                 m_CPUDataBySector.Add(sector.value, asset);
             }
@@ -85,6 +110,8 @@ namespace Unity.InfiniteWorld
         {
             data.Heightmap.Dispose();
             UnityEngine.Object.Destroy(data.HeightmapTex);
+            data.Normalmap.Dispose();
+            UnityEngine.Object.Destroy(data.NormalmapTex);
         }
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Unity.InfiniteWorld
 {
+    [AlwaysUpdateSystem]
     public class TerrainChunkLifecycleSystem : ComponentSystem
     {
         const int VISIBILITY = 4;
@@ -29,11 +30,14 @@ namespace Unity.InfiniteWorld
         [Inject]
         TerrainChunkAssetDataSystem chunkAssetData;
 
+        EntityArchetype archetype;
+
         Camera camera;
 
         public void Init(Camera _camera)
         {
             camera = _camera;
+            archetype = EntityManager.CreateArchetype(typeof(Sector), typeof(LOD), typeof(Transform), typeof(TerrainChunkGeneratorTrigger));
         }
 
         protected unsafe override void OnUpdate()
@@ -54,7 +58,8 @@ namespace Unity.InfiniteWorld
             for (int i = 0; i < sectors.Length; ++i)
             {
                 int2 sector = sectors[i].value;
-                int2 dist = math.abs(cameraSector - sector) + distOffset;
+                int2 dist = cameraSector - sector + distOffset;
+                
                 if (dist.x < GRID_WIDTH && dist.y < GRID_WIDTH)
                     grid[dist.y * GRID_WIDTH + dist.x] = 1;
                 else
@@ -62,7 +67,6 @@ namespace Unity.InfiniteWorld
                     chunkAssetData.DisposeChunkData(sectors[i]);
                     PostUpdateCommands.DestroyEntity(entities[i]);
                 }
-                    
             }
 
             for (int j = 0; j < GRID_WIDTH; ++j)
@@ -71,11 +75,10 @@ namespace Unity.InfiniteWorld
                 {
                     if (grid[j * GRID_WIDTH + i] == 0)
                     {
-                        PostUpdateCommands.CreateEntity(Bootstrap.terrainArchetype);
-                        PostUpdateCommands.SetComponent(new Sector(baseSector, i, j));
-                        PostUpdateCommands.SetComponent(new LOD(0));
-                        PostUpdateCommands.SetComponent(new Transform(float4x4.identity));
-                        PostUpdateCommands.AddComponent(new TerrainChunkGeneratorTrigger());
+                        var entity = EntityManager.CreateEntity(archetype);
+                        EntityManager.SetComponentData(entity, new Sector(baseSector, i, j));
+                        EntityManager.SetComponentData(entity, new LOD(0));
+                        EntityManager.SetComponentData(entity, new Transform(float4x4.identity));
                     }
                 }
             }

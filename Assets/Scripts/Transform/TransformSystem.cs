@@ -8,6 +8,16 @@ namespace Unity.InfiniteWorld
 {
     public class TransformSystem : ComponentSystem
     {
+        struct TransformSectorGroup
+        {
+            public ComponentDataArray<Transform> transforms;
+            [ReadOnly]
+            public ComponentDataArray<Sector> sectors;
+        }
+
+        [Inject]
+        TransformSectorGroup transformsSectorGroup;
+
         struct TransformPosGroup
         {
             public ComponentDataArray<Transform> transforms;
@@ -57,6 +67,19 @@ namespace Unity.InfiniteWorld
 
         protected override void OnUpdate()
         {
+            // Entities with Sector only
+            {
+                var transforms = transformsSectorGroup.transforms;
+                var sectors = transformsSectorGroup.sectors;
+
+                for (int index = 0; index < transforms.Length; index++)
+                {
+                    Sector sector = sectors[index];
+                    float4x4 matrix = math.translate(new float3(sector.value.x * Sector.SECTOR_SIZE, 0, sector.value.y * Sector.SECTOR_SIZE));
+                    transforms[index] = new Transform(matrix);
+                }
+            }
+
             // Entities with Position only
             {
                 var transforms = transformsPosGroup.transforms;
