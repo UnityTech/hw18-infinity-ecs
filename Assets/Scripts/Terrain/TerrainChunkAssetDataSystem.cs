@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -11,7 +12,7 @@ namespace Unity.InfiniteWorld
     {
         struct AssetData
         {
-            public NativeArray<Color> Heightmap;
+            public NativeArray<float> Heightmap;
             public Texture2D HeightmapTex;
         }
 
@@ -20,7 +21,7 @@ namespace Unity.InfiniteWorld
         List<int> m_FreedIndices;
         int m_NextIndex;
 
-        public NativeArray<Color> GetChunkHeightmap(Sector sector)
+        public NativeArray<float> GetChunkHeightmap(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).Heightmap;
         }
@@ -28,6 +29,13 @@ namespace Unity.InfiniteWorld
         public Texture2D GetChunkHeightmapTex(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
+        }
+
+        public void DisposeChunkData(Sector sector)
+        {
+            if (m_CPUDataBySector.TryGetValue(sector.value, out AssetData asset))
+                Dispose(asset);
+            m_CPUDataBySector.Remove(sector.value);
         }
 
         protected override void OnCreateManager(int capacity)
@@ -40,10 +48,7 @@ namespace Unity.InfiniteWorld
         protected override void OnDestroyManager()
         {
             foreach (var assets in m_CPUDataBySector)
-            {
-                assets.Value.Heightmap.Dispose();
-                Object.Destroy(assets.Value.HeightmapTex);
-            }
+                Dispose(assets.Value);
             m_CPUDataBySector.Clear();
             m_CPUDataBySector = null;
             m_FreedIndices = null;
@@ -59,7 +64,7 @@ namespace Unity.InfiniteWorld
             {
                 asset = new AssetData
                 {
-                    Heightmap = new NativeArray<Color>(
+                    Heightmap = new NativeArray<float>(
                         WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
                         Allocator.Persistent
                     ),
@@ -74,6 +79,12 @@ namespace Unity.InfiniteWorld
             }
 
             return asset;
+        }
+
+        void Dispose(AssetData data)
+        {
+            data.Heightmap.Dispose();
+            UnityEngine.Object.Destroy(data.HeightmapTex);
         }
     }
 }

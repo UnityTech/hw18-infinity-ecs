@@ -26,6 +26,8 @@ namespace Unity.InfiniteWorld
 
         [Inject]
         ChunkGroup chunksGroup;
+        [Inject]
+        TerrainChunkAssetDataSystem chunkAssetData;
 
         Camera camera;
 
@@ -56,7 +58,11 @@ namespace Unity.InfiniteWorld
                 if (dist.x < GRID_WIDTH && dist.y < GRID_WIDTH)
                     grid[dist.y * GRID_WIDTH + dist.x] = 1;
                 else
+                {
+                    chunkAssetData.DisposeChunkData(sectors[i]);
                     PostUpdateCommands.DestroyEntity(entities[i]);
+                }
+                    
             }
 
             for (int j = 0; j < GRID_WIDTH; ++j)

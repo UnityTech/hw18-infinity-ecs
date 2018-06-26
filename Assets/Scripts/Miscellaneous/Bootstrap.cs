@@ -22,6 +22,7 @@ namespace Unity.InfiniteWorld
         public static void InitializeWithScene()
         {
             World.Active.GetOrCreateManager<CameraControlSystem>().Init(Camera.main);
+            World.Active.GetOrCreateManager<TerrainChunkLifecycleSystem>().Init(Camera.main);
 
             var entityManager = World.Active.GetOrCreateManager<EntityManager>();
             var entity = entityManager.CreateEntity(terrainArchetype);
