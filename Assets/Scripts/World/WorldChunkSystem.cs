@@ -6,7 +6,7 @@ namespace Unity.InfiniteWorld
     {
         protected override void OnUpdate()
         {
-            throw new System.NotImplementedException();
+            
         }
     }
 }

@@ -7,24 +7,21 @@ namespace Unity.InfiniteWorld
     public class Bootstrap
     {
         public static EntityArchetype terrainArchetype;
-        public static TerrainChunkGenerator terrainGenerator;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
             var entityManager = World.Active.GetOrCreateManager<EntityManager>();
+            World.Active.GetOrCreateManager<TerrainChunkAssetDataSystem>(); // Instantiate only
+            World.Active.GetOrCreateManager<TerrainChunkRenderSystem>();
 
-            terrainGenerator = new TerrainChunkGenerator();
-            terrainGenerator.Init();
-
-            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(LOD), typeof(TerrainChunkCPUData), typeof(Transform));
+            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(LOD), typeof(Transform));
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void InitializeWithScene()
         {
             World.Active.GetOrCreateManager<CameraControlSystem>().Init(Camera.main);
-            World.Active.GetOrCreateManager<TerrainChunkRenderSystem>().Init(terrainGenerator);
 
             var entityManager = World.Active.GetOrCreateManager<EntityManager>();
             var entity = entityManager.CreateEntity(terrainArchetype);
