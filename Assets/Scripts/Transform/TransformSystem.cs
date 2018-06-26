@@ -13,6 +13,10 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
             public ComponentDataArray<Sector> sectors;
+            [ReadOnly]
+            public SubtractiveComponent<Shift> shift;
+            [ReadOnly]
+            public SubtractiveComponent<Rotation> rotations;
         }
 
         [Inject]
