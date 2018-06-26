@@ -2,6 +2,7 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Unity.InfiniteWorld
@@ -24,6 +25,18 @@ namespace Unity.InfiniteWorld
             }
         }
 
+        struct GenerateNormalmapJob : IJobParallelForBatch
+        {
+            [ReadOnly] public Sector Sector;
+            [WriteOnly] public NativeArray<float3> Normalmap;
+
+            public void Execute(int startIndex, int count)
+            {
+
+                // Calcul normal map
+            }
+        }
+
         struct TriggeredSectors
         {
             [ReadOnly]
@@ -34,6 +47,8 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Sector> Sectors;
             public SubtractiveComponent<TerrainChunkHasHeightmap> NotHasHeightmap;
             public SubtractiveComponent<TerrainChunkIsHeightmapBakingComponent> NotIsBakingHeightmap;
+            public SubtractiveComponent<TerrainChunkHasNormalmap> NotHasNormalmap;
+            public SubtractiveComponent<TerrainChunkIsNormalmapBakingComponent> NotIsBakingNormalmap;
         }
 
         struct DataToUploadOnGPU
@@ -70,6 +85,13 @@ namespace Unity.InfiniteWorld
                     cmd.RemoveComponent<TerrainChunkIsHeightmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasHeightmap());
 
+                    var normalmap = m_TerrainChunkAssetDataSystem.GetChunkNormalmap(data.Sector);
+                    var normalmapTex = m_TerrainChunkAssetDataSystem.GetChunkNormalmapTex(data.Sector);
+                    normalmapTex.LoadRawTextureData(normalmap);
+                    normalmapTex.Apply();
+                    cmd.RemoveComponent<TerrainChunkIsNormalmapBakingComponent>(data.Entity);
+                    cmd.AddComponent(data.Entity, new TerrainChunkHasNormalmap());
+
                     m_DataToUploadOnGPU.RemoveAt(i);
                 }
             }
@@ -82,6 +104,7 @@ namespace Unity.InfiniteWorld
                 {
                     var sector = m_TriggeredSectors.Sectors[i];
                     var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(sector);
+                    var normalmap = m_TerrainChunkAssetDataSystem.GetChunkNormalmap(sector);
                     JobHandle thisChunkJob = dependsOn;
 
                     {
@@ -96,9 +119,22 @@ namespace Unity.InfiniteWorld
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize / (8 * 8),
                             dependsOn
                         );
+
+                        var job2 = new GenerateNormalmapJob
+                        {
+                            Sector = sector,
+                            Normalmap = normalmap
+                        };
+
+                        thisChunkJob = job2.ScheduleBatch(
+                            WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
+                            1,
+                            thisChunkJob
+                        );
                     }
 
                     cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsHeightmapBakingComponent());
+                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsNormalmapBakingComponent());
 
                     m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
                     {
