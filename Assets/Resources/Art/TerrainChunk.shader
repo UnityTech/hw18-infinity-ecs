@@ -12,12 +12,13 @@
 
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+		#pragma surface surf Standard fullforwardshadows vertex:vert
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
 
 		sampler2D _MainTex;
+		sampler2D _Heightmap;
 
 		struct Input {
 			float2 uv_MainTex;
@@ -25,8 +26,12 @@
 
 		half _Glossiness;
 		half _Metallic;
-		fixed4 _Color;
-		//Texture2D _Heightmap;
+		float4 _Color;
+
+		void vert(inout appdata_full v) {
+			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
+			v.vertex.xyz += v.normal * height;
+		}
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.

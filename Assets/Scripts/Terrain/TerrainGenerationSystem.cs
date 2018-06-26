@@ -96,7 +96,6 @@ namespace Unity.InfiniteWorld
             // Update sectors
             if (m_TriggeredSectors.Sectors.Length > 0)
             {
-                Debug.Log(m_TriggeredSectors.Sectors.Length);
                 var jobHandles = new NativeArray<JobHandle>(m_TriggeredSectors.Sectors.Length, Allocator.TempJob);
                 for (int i = 0, c = m_TriggeredSectors.Sectors.Length; i < c; ++i)
                 {
