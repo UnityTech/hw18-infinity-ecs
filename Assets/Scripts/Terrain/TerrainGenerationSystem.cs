@@ -1,7 +1,7 @@
-﻿using Unity.Collections;
+﻿using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace Unity.InfiniteWorld
@@ -9,15 +9,18 @@ namespace Unity.InfiniteWorld
     [AlwaysUpdateSystem]
     public unsafe class TerrainGenerationSystem : JobComponentSystem
     {
-        struct GenerateChunkDataJob : IJobParallelForBatch
+        struct GenerateHeightmapJob : IJobParallelForBatch
         {
             [ReadOnly] public Sector Sector;
-            [WriteOnly] public NativeArray<float> Heightmap;
+            [WriteOnly] public NativeArray<Color> Heightmap;
 
             public void Execute(int startIndex, int count)
             {
                 for (int i = startIndex, c = startIndex + count; i < c; ++i)
-                    Heightmap[i] = Mathf.PerlinNoise(i % WorldChunkConstants.ChunkSize, i / WorldChunkConstants.ChunkSize);
+                {
+                    var luma = Mathf.PerlinNoise(i % WorldChunkConstants.ChunkSize, i / WorldChunkConstants.ChunkSize);
+                    Heightmap[i] = new Color(luma, luma, luma, 1);
+                }
             }
         }
 
@@ -29,61 +32,59 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Sector> Sectors;
         }
 
-        [Inject] TriggeredSectors m_TriggeredSectors;
-
-        struct CPUData
+        struct DataToUploadOnGPU
         {
-            public NativeArray<float> Heightmap;
-            public Texture2D HeightmapTex;
-        }
-
-        NativeHashMap<int2, int> m_CPUDataIndexBySector;
-        NativeArray<CPUData> m_CPUDatas;
-
-        bool MustUpdateSector(
-            Sector sector,
-            WorldChunkGeneratorTrigger trigger
-        )
-        {
-            return true;
-        }
-
-        struct UpdateRequest
-        {
+            public JobHandle Handle;
             public Sector Sector;
         }
 
-        protected override void OnCreateManager(int capacity)
-        {
-            m_CPUDataIndexBySector = new NativeHashMap<int2, int>(WorldChunkConstants.ChunkCapacity, Allocator.Persistent);
-            m_CPUDatas = new NativeArray<CPUData>(WorldChunkConstants.ChunkCapacity, Allocator.Persistent);
-        }
+        [Inject] TriggeredSectors m_TriggeredSectors;
+        [Inject] TerrainChunkAssetDataSystem m_TerrainChunkAssetDataSystem;
 
-        protected override void OnDestroyManager()
-        {
-            m_CPUDataIndexBySector.Dispose();
-            m_CPUDatas.Dispose();
-        }
+        List<DataToUploadOnGPU> m_DataToUploadOnGPU = new List<DataToUploadOnGPU>();
 
         protected override JobHandle OnUpdate(JobHandle dependsOn)
         {
+            // Upload to GPU datas that are ready
+            for (int i = 0; i < m_DataToUploadOnGPU.Count; ++i)
+            {
+                var data = m_DataToUploadOnGPU[i];
+                var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(data.Sector);
+                var heightmapTex = m_TerrainChunkAssetDataSystem.GetChunkHeightmapTex(data.Sector);
+                heightmapTex.SetPixels(heightmap.ToArray());
+                heightmapTex.Apply();
+            }
+            m_DataToUploadOnGPU.Clear();
+
+            // Update sectors
             if (m_TriggeredSectors.Sectors.Length > 0)
             {
                 var jobHandles = new NativeArray<JobHandle>(m_TriggeredSectors.Sectors.Length, Allocator.TempJob);
                 for (int i = 0, c = m_TriggeredSectors.Sectors.Length; i < c; ++i)
                 {
-                    m_CPUDataIndexBySector.TryGetValue(m_TriggeredSectors.Sectors[i].value, out int cpuDataIndex);
-                    var job = new GenerateChunkDataJob
-                    {
-                        Sector = m_TriggeredSectors.Sectors[i],
-                        Heightmap = m_CPUDatas[cpuDataIndex].Heightmap
-                    };
+                    JobHandle thisChunkJob = dependsOn;
 
-                    jobHandles[i] = job.ScheduleBatch(
-                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize / (8 * 8),
-                        dependsOn
-                    );
+                    {
+                        var job = new GenerateHeightmapJob
+                        {
+                            Sector = m_TriggeredSectors.Sectors[i],
+                            Heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(m_TriggeredSectors.Sectors[i])
+                        };
+
+                        thisChunkJob = job.ScheduleBatch(
+                            WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
+                            WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize / (8 * 8),
+                            dependsOn
+                        );
+                    }
+
+                    m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
+                    {
+                        Handle = thisChunkJob,
+                        Sector = m_TriggeredSectors.Sectors[i]
+                    });
+
+                    jobHandles[i] = thisChunkJob;
                 }
                 dependsOn = JobHandle.CombineDependencies(jobHandles);
                 jobHandles.Dispose();

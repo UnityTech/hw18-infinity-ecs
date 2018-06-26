@@ -13,11 +13,12 @@ namespace Unity.InfiniteWorld
         public static void Initialize()
         {
             var entityManager = World.Active.GetOrCreateManager<EntityManager>();
+            World.Active.GetOrCreateManager<TerrainChunkAssetDataSystem>(); // Instantiate only
 
             terrainGenerator = new TerrainChunkGenerator();
             terrainGenerator.Init();
 
-            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(LOD), typeof(TerrainChunkCPUData), typeof(Transform));
+            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(LOD), typeof(TerrainChunkAssetData), typeof(Transform));
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
