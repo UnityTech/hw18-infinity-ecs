@@ -1,4 +1,4 @@
-﻿namespace InfiniteWorld
+﻿namespace Unity.InfiniteWorld
 {
     public struct RandomProvider
     {
