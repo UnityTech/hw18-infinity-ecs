@@ -19,6 +19,8 @@
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
 
+		#include "noiseSimplex.cginc"
+
 		sampler2D _MainTex;
 		sampler2D _Heightmap;
 
@@ -26,6 +28,8 @@
 		float4 _MainTex0_ST;
 		sampler2D _Normal0;
 		float4 _Normal0_ST;
+
+		float4 _Sector;
 
 		struct Input {
 			float2 uv_MainTex;
@@ -47,14 +51,27 @@
 			// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
-		void surf (Input IN, inout SurfaceOutputStandard o) {
+		void material0Update(float2 uv, inout float3 albedo)
+		{
+			float albedoNoise = snoise(uv * 3);
+			albedoNoise = albedoNoise * 0.3 + 0.4;
+			albedo *= albedoNoise;
+		}
+
+		void surf (Input IN, inout SurfaceOutputStandard o) 
+		{
+			float2 uv = IN.uv_MainTex;
+			float2 position = _Sector + uv;
+
+			float3 albedo0 = tex2D(_MainTex0, IN.uv_MainTex * _MainTex0_ST.xy + _MainTex0_ST.zw).xyz;
+			material0Update(position, albedo0);
+
 			// Albedo comes from a texture tinted by color
-			float4 c = tex2D (_MainTex0, IN.uv_MainTex * _MainTex0_ST.xy + _MainTex0_ST.zw);
-			o.Albedo = c.rgb;
+			o.Albedo = albedo0.rgb;
 			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
+			o.Alpha = 1;
 		}
 		ENDCG
 	}
