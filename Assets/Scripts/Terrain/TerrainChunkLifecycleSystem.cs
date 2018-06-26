@@ -74,7 +74,6 @@ namespace Unity.InfiniteWorld
                         PostUpdateCommands.CreateEntity(Bootstrap.terrainArchetype);
                         PostUpdateCommands.SetComponent(new Sector(baseSector, i, j));
                         PostUpdateCommands.SetComponent(new LOD(0));
-                        PostUpdateCommands.SetComponent(new TerrainChunkCPUData());
                         PostUpdateCommands.SetComponent(new Transform(float4x4.identity));
                         PostUpdateCommands.AddComponent(new TerrainChunkGeneratorTrigger());
                     }
