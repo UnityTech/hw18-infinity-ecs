@@ -15,8 +15,7 @@ namespace Unity.InfiniteWorld
             public Texture2D HeightmapTex;
         }
 
-        NativeHashMap<int2, int> m_CPUDataIndexBySector;
-        NativeArray<AssetData> m_CPUDatas;
+        Dictionary<int2, AssetData> m_CPUDataBySector;
 
         List<int> m_FreedIndices;
         int m_NextIndex;
@@ -33,16 +32,20 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            m_CPUDataIndexBySector = new NativeHashMap<int2, int>(WorldChunkConstants.ChunkCapacity, Allocator.Persistent);
-            m_CPUDatas = new NativeArray<AssetData>(WorldChunkConstants.ChunkCapacity, Allocator.Persistent);
+            m_CPUDataBySector = new Dictionary<int2, AssetData>();
             m_FreedIndices = new List<int>();
             m_NextIndex = 0;
         }
 
         protected override void OnDestroyManager()
         {
-            m_CPUDataIndexBySector.Dispose();
-            m_CPUDatas.Dispose();
+            foreach (var assets in m_CPUDataBySector)
+            {
+                assets.Value.Heightmap.Dispose();
+                Object.Destroy(assets.Value.HeightmapTex);
+            }
+            m_CPUDataBySector.Clear();
+            m_CPUDataBySector = null;
             m_FreedIndices = null;
         }
 
@@ -52,9 +55,9 @@ namespace Unity.InfiniteWorld
 
         AssetData GetOrCreateChunkAssetData(Sector sector)
         {
-            if (!m_CPUDataIndexBySector.TryGetValue(sector.value, out int index))
+            if (!m_CPUDataBySector.TryGetValue(sector.value, out AssetData asset))
             {
-                var asset = new AssetData
+                asset = new AssetData
                 {
                     Heightmap = new NativeArray<Color>(
                         WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
@@ -67,21 +70,10 @@ namespace Unity.InfiniteWorld
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     )
                 };
-                index = -1;
-                if (m_FreedIndices.Count > 0)
-                {
-                    index = m_FreedIndices[0];
-                    m_FreedIndices.RemoveAt(0);
-                }
-                else
-                {
-                    index = m_NextIndex;
-                    ++m_NextIndex;
-                }
-                m_CPUDatas[index] = asset;
+                m_CPUDataBySector.Add(sector.value, asset);
             }
 
-            return m_CPUDatas[index];
+            return asset;
         }
     }
 }
