@@ -26,14 +26,11 @@ namespace Unity.InfiniteWorld
 
         struct TriggeredSectors
         {
-            [ReadOnly]
-            public EntityArray Entities;
-            [ReadOnly]
-            public ComponentDataArray<TerrainChunkGeneratorTrigger> Triggers;
-            [ReadOnly]
-            public ComponentDataArray<Sector> Sectors;
-            public SubtractiveComponent<TerrainChunkHasHeightmap> NotHasHeightmap;
-            public SubtractiveComponent<TerrainChunkIsHeightmapBakingComponent> NotIsBakingHeightmap;
+            [ReadOnly] public EntityArray Entities;
+            [ReadOnly] public ComponentDataArray<TerrainChunkGeneratorTrigger> Triggers;
+            [ReadOnly] public ComponentDataArray<Sector> Sectors;
+            [ReadOnly] public SubtractiveComponent<TerrainChunkHasHeightmap> NotHasHeightmap;
+            [ReadOnly] public SubtractiveComponent<TerrainChunkIsHeightmapBakingComponent> NotIsBakingHeightmap;
         }
 
         struct DataToUploadOnGPU
@@ -77,9 +74,11 @@ namespace Unity.InfiniteWorld
             // Update sectors
             if (m_TriggeredSectors.Sectors.Length > 0)
             {
+                Debug.Log(m_TriggeredSectors.Sectors.Length);
                 var jobHandles = new NativeArray<JobHandle>(m_TriggeredSectors.Sectors.Length, Allocator.TempJob);
                 for (int i = 0, c = m_TriggeredSectors.Sectors.Length; i < c; ++i)
                 {
+                    var entity = m_TriggeredSectors.Entities[i];
                     var sector = m_TriggeredSectors.Sectors[i];
                     var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(sector);
                     JobHandle thisChunkJob = dependsOn;
@@ -93,18 +92,18 @@ namespace Unity.InfiniteWorld
 
                         thisChunkJob = job.ScheduleBatch(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize / (8 * 8),
+                            1,
                             dependsOn
                         );
                     }
 
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsHeightmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsHeightmapBakingComponent());
 
                     m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
                     {
                         Handle = thisChunkJob,
                         Sector = sector,
-                        Entity = m_TriggeredSectors.Entities[i]
+                        Entity = entity
                     });
 
                     jobHandles[i] = thisChunkJob;
