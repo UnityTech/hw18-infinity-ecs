@@ -28,7 +28,7 @@ namespace Unity.InfiniteWorld
         struct GenerateNormalmapJob : IJobParallelForBatch
         {
             [ReadOnly] public Sector Sector;
-            [WriteOnly] public NativeArray<float3> Normalmap;
+            [WriteOnly] public NativeArray<float4> Normalmap;
 
             public void Execute(int startIndex, int count)
             {
@@ -96,7 +96,6 @@ namespace Unity.InfiniteWorld
             // Update sectors
             if (m_TriggeredSectors.Sectors.Length > 0)
             {
-                Debug.Log(m_TriggeredSectors.Sectors.Length);
                 var jobHandles = new NativeArray<JobHandle>(m_TriggeredSectors.Sectors.Length, Allocator.TempJob);
                 for (int i = 0, c = m_TriggeredSectors.Sectors.Length; i < c; ++i)
                 {
