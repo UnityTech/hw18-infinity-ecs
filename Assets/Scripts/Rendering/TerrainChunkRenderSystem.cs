@@ -20,9 +20,6 @@ namespace Unity.InfiniteWorld
         Material material;
         MaterialPropertyBlock materialBlock = new MaterialPropertyBlock();
 
-        // Instance renderer takes only batches of 1023
-        Matrix4x4[] matricesArray = new Matrix4x4[1023];
-
         struct TerrainDataGroup
         {
             [ReadOnly]
@@ -35,20 +32,6 @@ namespace Unity.InfiniteWorld
         TerrainDataGroup terrainDataGroup;
         [Inject]
         TerrainChunkAssetDataSystem chunkAssets;
-
-        // This is copy&paste from MeshInstanceRendererSystem, necessary until Graphics.DrawMeshInstanced supports NativeArrays pulling the data in from a job.
-        public unsafe static void CopyMatrices(ComponentDataArray<Transform> transforms, int beginIndex, int length, Matrix4x4[] outMatrices)
-        {
-            fixed (Matrix4x4* matricesPtr = outMatrices)
-            {
-                Assert.AreEqual(sizeof(Matrix4x4), sizeof(Transform));
-                var matricesSlice = NativeSliceUnsafeUtility.ConvertExistingDataToNativeSlice<Transform>(matricesPtr, sizeof(Matrix4x4), length);
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref matricesSlice, AtomicSafetyHandle.GetTempUnsafePtrSliceHandle());
-#endif
-                transforms.CopyTo(matricesSlice, beginIndex);
-            }
-        }
 
         protected override void OnCreateManager(int capacity)
         {
@@ -68,8 +51,8 @@ namespace Unity.InfiniteWorld
             {
                 var heightmap = chunkAssets.GetChunkHeightmapTex(terrainDataGroup.sectors[index]);
                 materialBlock.SetTexture(_Heightmap, heightmap);
-                CopyMatrices(terrainDataGroup.transforms, index, 1, matricesArray);
-                Graphics.DrawMeshInstanced(gridMesh, 0, material, matricesArray, 1, materialBlock, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
+                RenderHelpers.CopyMatrices(terrainDataGroup.transforms, index, 1, RenderHelpers.matricesArray);
+                Graphics.DrawMeshInstanced(gridMesh, 0, material, RenderHelpers.matricesArray, 1, materialBlock, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
             }
         }
     }
