@@ -32,7 +32,7 @@
 
 		void vert(inout appdata_full v) {
 			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
-			v.vertex.xyz += v.normal * height * _HeightmapScale;
+			v.vertex.y += height * _HeightmapScale;
 		}
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.

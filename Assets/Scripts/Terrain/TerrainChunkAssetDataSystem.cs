@@ -100,6 +100,7 @@ namespace Unity.InfiniteWorld
                     )
 
                 };
+                asset.HeightmapTex.wrapMode = TextureWrapMode.Clamp;
                 m_CPUDataBySector.Add(sector.value, asset);
             }
 

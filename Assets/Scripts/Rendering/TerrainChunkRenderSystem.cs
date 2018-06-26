@@ -37,7 +37,7 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            gridMesh = TerrainChunkUtils.GenerateGridMesh(new float2(WorldChunkConstants.ChunkSize, WorldChunkConstants.ChunkSize), new int2(WorldChunkConstants.ChunkSize, WorldChunkConstants.ChunkSize));
+            gridMesh = TerrainChunkUtils.GenerateGridMesh(new float2(WorldChunkConstants.ChunkSize, WorldChunkConstants.ChunkSize), new int2(WorldChunkConstants.ChunkSize - 2, WorldChunkConstants.ChunkSize - 2));
             material = Resources.Load<Material>("Art/TerrainMaterial");
             Assert.AreNotEqual(null, material);
         }

@@ -17,8 +17,8 @@ namespace Unity.InfiniteWorld
 
             public void Execute(int i)
             {
-                var x = i / WorldChunkConstants.ChunkSize;
-                var y = i % WorldChunkConstants.ChunkSize; 
+                var y = i / WorldChunkConstants.ChunkSize;
+                var x = i % WorldChunkConstants.ChunkSize; 
                 var luma = noise.snoise(
                     new float2(
                         x / (float)(WorldChunkConstants.ChunkSize - 1),

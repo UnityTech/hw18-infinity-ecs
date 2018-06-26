@@ -11,33 +11,49 @@ namespace Unity.InfiniteWorld
         {
             Mesh mesh = new Mesh();
 
-            int count = (splits.x + 2) * (splits.y + 2);
+            int xVerts = splits.x + 2;
+            int yVerts = splits.y + 2;
+
+            int xEdges = xVerts - 1;
+            int yEdges = yVerts - 1;
+
+            int count = xVerts * yVerts;
             var positions = new Vector3[count];
             var normals = new Vector3[count];
             var uvs = new Vector2[count];
-            var indices = new int[(splits.x + 1) * (splits.y + 1) * 6];
+            var indices = new int[xEdges * yEdges * 6];
 
-            float stepX = 1.0f / splits.x;
-            float stepY = 1.0f / splits.y;
+            float stepX = 1.0f / xEdges;
+            float stepY = 1.0f / yEdges;
 
-            for (int tempY = 0; tempY < (splits.y + 2); ++tempY)
+            int index = 0;
+            float v = 0.0f;
+            float z = 0.0f;
+            for (int tempY = 0; tempY < yVerts; ++tempY)
             {
-                for (int tempX = 0; tempX < (splits.x + 2); ++tempX)
+                float u = 0.0f;
+                float x = 0.0f;
+                for (int tempX = 0; tempX < xVerts; ++tempX)
                 {
-                    int index = tempY * (splits.x + 2) + tempX;
-                    positions[index] = new Vector3(tempX * stepX * size.x, 0, tempY * stepY * size.y);
+                    positions[index] = new Vector3(x, 0, z);
                     normals[index] = new Vector3(0, 1, 0);
-                    uvs[index] = new Vector2(tempX * stepX, tempY * stepY);
+                    uvs[index] = new Vector2(u, v);
+                    ++index;
+
+                    u += stepX;
+                    x += stepX * size.y;
                 }
+                v += stepY;
+                z += stepY * size.y;
             }
 
             int temp = 0;
-            int lineStride = splits.x + 2;
-            for (int tempY = 0; tempY < (splits.y + 1); ++tempY)
+            int baseVert = 0;
+            int lineStride = xVerts;
+            for (int tempY = 0; tempY < yEdges; ++tempY)
             {
-                for (int tempX = 0; tempX < (splits.x + 1); ++tempX)
+                for (int tempX = 0; tempX < xEdges; ++tempX)
                 {
-                    int baseVert = tempY * lineStride + tempX;
                     indices[temp + 0] = baseVert + 0;
                     indices[temp + 1] = baseVert + lineStride;
                     indices[temp + 2] = baseVert + 1;
@@ -47,7 +63,9 @@ namespace Unity.InfiniteWorld
                     indices[temp + 5] = baseVert + 1;
 
                     temp += 6;
+                    ++baseVert;
                 }
+                ++baseVert;
             }
 
             mesh.vertices = positions;
