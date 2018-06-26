@@ -15,6 +15,11 @@ namespace Unity.InfiniteWorld
         {
             value = xy;
         }
+
+        public Sector(int2 baseSector, int xOffset, int yOffset)
+        {
+            value = baseSector + new int2(xOffset, yOffset);
+        }
     }
 
     public class SectorComponent : ComponentDataWrapper<Sector> { }

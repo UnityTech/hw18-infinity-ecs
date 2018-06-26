@@ -17,7 +17,7 @@ namespace Unity.InfiniteWorld
             terrainGenerator = new TerrainChunkGenerator();
             terrainGenerator.Init();
 
-            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(LOD), typeof(TerrainChunkCPUData), typeof(Transform));
+            terrainArchetype = entityManager.CreateArchetype(typeof(Sector), typeof(LOD), typeof(TerrainChunkCPUData), typeof(Transform));
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
