@@ -95,7 +95,7 @@ namespace Unity.InfiniteWorld
                     NormalmapTex = new Texture2D(
                         WorldChunkConstants.ChunkSize,
                         WorldChunkConstants.ChunkSize,
-                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32_SFloat,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     )
 
