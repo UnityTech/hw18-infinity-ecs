@@ -58,9 +58,9 @@ namespace Unity.InfiniteWorld
             for (int i = 0; i < sectors.Length; ++i)
             {
                 int2 sector = sectors[i].value;
-                int2 dist = cameraSector - sector + distOffset;
+                int2 dist = sector - baseSector;
                 
-                if (dist.x < GRID_WIDTH && dist.y < GRID_WIDTH)
+                if (dist.x < GRID_WIDTH && dist.y < GRID_WIDTH && dist.x >= 0 && dist.y >= 0)
                     grid[dist.y * GRID_WIDTH + dist.x] = 1;
                 else
                 {
