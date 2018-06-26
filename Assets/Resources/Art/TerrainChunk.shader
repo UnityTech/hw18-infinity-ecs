@@ -1,10 +1,8 @@
 ﻿Shader "Custom/TerrainChunk" {
 	Properties {
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
 		_HeightmapScale("Heightmap Scale", Float) = 100
-		_Heightmap ("Heightmap", 2D) = "black" {}
 		_MainTex0 ("Albedo 1 (RGB)", 2D) = "white" {}
 		_NormalTex0 ("Normal 1", 2D) = "white" {}
  	}
@@ -21,8 +19,9 @@
 
 		#include "noiseSimplex.cginc"
 
-		sampler2D _MainTex;
 		sampler2D _Heightmap;
+		sampler2D _Normalmap;
+		float4 _Normalmap_ST;
 
 		sampler2D _MainTex0;
 		float4 _MainTex0_ST;
@@ -32,7 +31,7 @@
 		float4 _Sector;
 
 		struct Input {
-			float2 uv_MainTex;
+			float2 uv_MainTex0_ST;
 		};
 
 		half _Glossiness;
@@ -42,6 +41,9 @@
 		void vert(inout appdata_full v) {
 			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
 			v.vertex.y += height * _HeightmapScale;
+			float3 normal = tex2Dlod(_Normalmap, float4(v.texcoord.xy, 0, 0)).xyz;
+			normal = normal * 2 - 1;
+			v.normal = normal;
 		}
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -51,20 +53,23 @@
 			// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
-		void material0Update(float2 uv, inout float3 albedo)
+		void material0Update(float2 position, inout float3 albedo, inout float3 normal0)
 		{
-			float albedoNoise = snoise(uv * 3);
-			albedoNoise = albedoNoise * 0.3 + 0.4;
+			float albedoNoise = snoise(position);
+			albedoNoise = albedoNoise * 0.3 + 0.7;
 			albedo *= albedoNoise;
 		}
 
 		void surf (Input IN, inout SurfaceOutputStandard o) 
 		{
-			float2 uv = IN.uv_MainTex;
-			float2 position = _Sector + uv;
+			float2 uv = IN.uv_MainTex0_ST;
+			float2 position = _Sector.xy + uv;
 
-			float3 albedo0 = tex2D(_MainTex0, IN.uv_MainTex * _MainTex0_ST.xy + _MainTex0_ST.zw).xyz;
-			material0Update(position, albedo0);
+			float3 normal = tex2D(_Normalmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).xyz;
+			float3 albedo0 = tex2D(_MainTex0, uv * _MainTex0_ST.xy + _MainTex0_ST.zw).xyz;
+			float3 normal0 = tex2D(_Normal0, uv * _Normal0_ST.xy + _Normal0_ST.zw).xyz;
+			normal0 = normalize(float3(normal0.xy + normal.xy, normal.z));
+			material0Update(position, albedo0, normal0);
 
 			// Albedo comes from a texture tinted by color
 			o.Albedo = albedo0.rgb;
@@ -72,6 +77,7 @@
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
 			o.Alpha = 1;
+			//o.Normal = normal * 2 - 1;
 		}
 		ENDCG
 	}
