@@ -1,12 +1,13 @@
 ﻿Shader "Custom/TerrainChunk" {
 	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
 		_HeightmapScale("Heightmap Scale", Float) = 100
 		_Heightmap ("Heightmap", 2D) = "black" {}
-	}
+		_MainTex0 ("Albedo 1 (RGB)", 2D) = "white" {}
+		_NormalTex0 ("Normal 1", 2D) = "white" {}
+ 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
 		LOD 200
@@ -21,13 +22,17 @@
 		sampler2D _MainTex;
 		sampler2D _Heightmap;
 
+		sampler2D _MainTex0;
+		float4 _MainTex0_ST;
+		sampler2D _Normal0;
+		float4 _Normal0_ST;
+
 		struct Input {
 			float2 uv_MainTex;
 		};
 
 		half _Glossiness;
 		half _Metallic;
-		float4 _Color;
 		float _HeightmapScale;
 
 		void vert(inout appdata_full v) {
@@ -44,7 +49,7 @@
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
+			float4 c = tex2D (_MainTex0, IN.uv_MainTex * _MainTex0_ST.xy + _MainTex0_ST.zw);
 			o.Albedo = c.rgb;
 			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;

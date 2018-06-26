@@ -36,8 +36,8 @@ namespace Unity.InfiniteWorld
                 strafe *= 10;
             }
 
-            var deltaPos = camera.transform.forward * forward * dt;
-            deltaPos += camera.transform.right * strafe * dt;
+            var deltaPos = camera.transform.forward * forward * dt * 10;
+            deltaPos += camera.transform.right * strafe * dt * 10;
             camera.transform.position += deltaPos;
         }
     }
