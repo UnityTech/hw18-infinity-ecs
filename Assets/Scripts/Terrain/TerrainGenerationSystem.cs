@@ -12,14 +12,14 @@ namespace Unity.InfiniteWorld
         struct GenerateHeightmapJob : IJobParallelForBatch
         {
             [ReadOnly] public Sector Sector;
-            [WriteOnly] public NativeArray<Color> Heightmap;
+            [WriteOnly] public NativeArray<float> Heightmap;
 
             public void Execute(int startIndex, int count)
             {
                 for (int i = startIndex, c = startIndex + count; i < c; ++i)
                 {
                     var luma = Mathf.PerlinNoise(i % WorldChunkConstants.ChunkSize, i / WorldChunkConstants.ChunkSize);
-                    Heightmap[i] = new Color(luma, luma, luma, 1);
+                    Heightmap[i] = luma;
                 }
             }
         }
@@ -27,7 +27,7 @@ namespace Unity.InfiniteWorld
         struct TriggeredSectors
         {
             [ReadOnly]
-            public ComponentDataArray<WorldChunkGeneratorTrigger> Triggers;
+            public ComponentDataArray<TerrainChunkGeneratorTrigger> Triggers;
             [ReadOnly]
             public ComponentDataArray<Sector> Sectors;
         }
@@ -51,7 +51,7 @@ namespace Unity.InfiniteWorld
                 var data = m_DataToUploadOnGPU[i];
                 var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(data.Sector);
                 var heightmapTex = m_TerrainChunkAssetDataSystem.GetChunkHeightmapTex(data.Sector);
-                heightmapTex.SetPixels(heightmap.ToArray());
+                heightmapTex.LoadRawTextureData(heightmap);
                 heightmapTex.Apply();
             }
             m_DataToUploadOnGPU.Clear();
