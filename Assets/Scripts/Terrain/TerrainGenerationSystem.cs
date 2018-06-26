@@ -10,18 +10,23 @@ namespace Unity.InfiniteWorld
     [AlwaysUpdateSystem]
     public unsafe class TerrainGenerationSystem : JobComponentSystem
     {
-        struct GenerateHeightmapJob : IJobParallelForBatch
+        struct GenerateHeightmapJob : IJobParallelFor
         {
             [ReadOnly] public Sector Sector;
             [WriteOnly] public NativeArray<float> Heightmap;
 
-            public void Execute(int startIndex, int count)
+            public void Execute(int i)
             {
-                for (int i = startIndex, c = startIndex + count; i < c; ++i)
-                {
-                    var luma = Mathf.PerlinNoise(i % WorldChunkConstants.ChunkSize, i / WorldChunkConstants.ChunkSize);
-                    Heightmap[i] = luma;
-                }
+                var x = i / WorldChunkConstants.ChunkSize;
+                var y = i % WorldChunkConstants.ChunkSize; 
+                var luma = noise.snoise(
+                    new float2(
+                        x / (float)(WorldChunkConstants.ChunkSize - 1),
+                        y / (float)(WorldChunkConstants.ChunkSize - 1)
+                    )
+                    + Sector.value
+                );
+                Heightmap[i] = luma;
             }
         }
 
@@ -112,9 +117,9 @@ namespace Unity.InfiniteWorld
                             Heightmap = heightmap
                         };
 
-                        thisChunkJob = job.ScheduleBatch(
+                        thisChunkJob = job.Schedule(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            1,
+                            64,
                             dependsOn
                         );
 
