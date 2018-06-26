@@ -28,7 +28,7 @@ namespace Unity.InfiniteWorld
         struct GenerateNormalmapJob : IJobParallelForBatch
         {
             [ReadOnly] public Sector Sector;
-            [WriteOnly] public NativeArray<float3> Normalmap;
+            [WriteOnly] public NativeArray<float4> Normalmap;
 
             public void Execute(int startIndex, int count)
             {
