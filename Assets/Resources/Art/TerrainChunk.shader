@@ -4,6 +4,7 @@
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_HeightmapScale("Heightmap Scale", Float) = 100
 		_Heightmap ("Heightmap", 2D) = "black" {}
 	}
 	SubShader {
@@ -27,10 +28,11 @@
 		half _Glossiness;
 		half _Metallic;
 		float4 _Color;
+		float _HeightmapScale;
 
 		void vert(inout appdata_full v) {
 			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
-			v.vertex.xyz += v.normal * height;
+			v.vertex.xyz += v.normal * height * _HeightmapScale;
 		}
 
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
