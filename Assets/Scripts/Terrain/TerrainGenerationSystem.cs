@@ -39,6 +39,27 @@ namespace Unity.InfiniteWorld
             {
 
                 // Calcul normal map
+                for (int i = startIndex, c = startIndex + count; i < c; ++i)
+                {
+                    // Calcul normal map
+                    var x = i / WorldChunkConstants.ChunkSize;
+                    var y = i % WorldChunkConstants.ChunkSize;
+
+                    var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+
+                    var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
+                    var xRight = x1 + y * WorldChunkConstants.ChunkSize;
+                    var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
+                    var yDown = x + y1 * WorldChunkConstants.ChunkSize;
+                    var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
+                    var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
+
+                    var luma = new float4(dx, dy, 1, 1);
+                    Normalmap[i] = luma;
+                }
             }
         }
 
