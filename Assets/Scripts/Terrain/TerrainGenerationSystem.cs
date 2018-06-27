@@ -76,11 +76,47 @@ namespace Unity.InfiniteWorld
 
             return value;
         }
+
+        public static float clip01(float value, float threshold)
+        {
+            return math.clamp(value - threshold, 0.0f, 1.0f) / (1.0f - threshold);
+        }
     }
 
     [AlwaysUpdateSystem]
     public unsafe class TerrainGenerationSystem : JobComponentSystem
     {
+        static float CalculateHeight(Sector sector, int i)
+        {
+            var y = i / WorldChunkConstants.ChunkSize;
+            var x = i % WorldChunkConstants.ChunkSize;
+
+            const float invScale = 1.0f / (WorldChunkConstants.ChunkSize - 1);
+
+            float2 uv = new float2(x, y) * invScale;
+            float2 position = uv + sector.value;
+
+            // Base height
+            float baseHeight = noisex.fbm(sector.value, uv, 4, 0.8f, 0.3f, 0.4f) * 0.2f + 0.5f;
+
+            // Mountains
+            float mountainSectorScale = 0.3f;
+            float mountainBase = noisex.ridge(sector.value, uv, 3, 0.7f, mountainSectorScale, 0.2f, 0.56f);
+            float mountainBaseWeight = noise.snoise(position * 0.2f) * 0.5f + 0.5f;
+            float mountainBaseWeighted = mountainBase * mountainBaseWeight;
+            float mountainWeight = noisex.clip01(mountainBaseWeighted, 0.2f);
+            mountainWeight = noisex.clip01(mountainWeight, -0.6f);
+            mountainWeight *= mountainWeight * mountainWeight;
+            mountainWeight *= 4.0f;
+            mountainWeight = math.clamp(mountainWeight, 0.0f, 1.0f);
+
+            float mountainDetails = noisex.ridge(sector.value, uv, 5, 0.6f, mountainSectorScale, 0.5f, 0.45f);
+
+            float height = mountainDetails * mountainWeight;
+
+            return height;
+        }
+
         struct GenerateHeightmapJob : IJobParallelFor
         {
             [ReadOnly] public Sector Sector;
@@ -88,17 +124,7 @@ namespace Unity.InfiniteWorld
 
             public void Execute(int i)
             {
-                var y = i / WorldChunkConstants.ChunkSize;
-                var x = i % WorldChunkConstants.ChunkSize;
-
-                const float invScale = 1.0f/(WorldChunkConstants.ChunkSize - 1);
-                var value = noisex.turb(
-                    Sector.value,
-                    new float2(x, y) * invScale,
-                    4, 0.8f, 1.0f, 0.5f
-                );
-
-                Heightmap[i] = value;
+                Heightmap[i] = CalculateHeight(Sector, i);
             }
         }
 
