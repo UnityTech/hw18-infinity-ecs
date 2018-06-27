@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Unity.InfiniteWorld
 {
+    [AlwaysUpdateSystem]
     public class WorldSectorLifecycleSystem : ComponentSystem
     {
         struct CreateFilter

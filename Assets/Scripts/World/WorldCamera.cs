@@ -34,7 +34,7 @@ namespace Unity.InfiniteWorld
                 int2 sector = sectors[i].value;
                 int2 dist = sector - this.sector + offset;
 
-                if (dist.x < halfSize && dist.y < halfSize && dist.x >= 0 && dist.y >= 0)
+                if (dist.x < gridSize && dist.y < gridSize && dist.x >= 0 && dist.y >= 0)
                     grid[dist.y * gridSize + dist.x] = 1;
                 else
                     onRemove(i, sector);
@@ -45,7 +45,7 @@ namespace Unity.InfiniteWorld
                 for (int i = 0; i < gridSize; ++i)
                 {
                     if (grid[j * gridSize + i] == 0)
-                        onAdd(this.sector + new int2(i, j));
+                        onAdd(this.sector + new int2(i, j) - offset);
                 }
             }
 
