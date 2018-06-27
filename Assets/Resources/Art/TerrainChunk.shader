@@ -53,12 +53,11 @@ Shader "Custom/TerrainChunk"
 
 		#include "noiseSimplex.cginc"
 
-#define MERGE_NAME(A, B) A ## B
-
-		float4 _Splatmap_ST = float4(1, 1, 0, 0);
+		#define MERGE_NAME(A, B) A ## B
+		#define _ChunkTextureSize float2(255, 255)
+		#define LOAD_TEXTURE2D_LOD(tex, coord, lod) tex.Load(int3(coord, lod))
 
 		CBUFFER_START(MaterialLayers)
-			float4 _Normalmap_ST;
 			float4 _MainTex0_ST;
 			float4 _Detail0_ST;
 			float4 _Normal0_ST;
@@ -72,29 +71,33 @@ Shader "Custom/TerrainChunk"
 			float4 _Detail3_ST;
 			float4 _Normal3_ST;
 
-			half _Glossiness;
-			half _Metallic;
+			float _Glossiness;
+			float _Metallic;
 
 			float4 _Sector;
 			float _HeightmapScale;
 		CBUFFER_END
 
-		sampler2D _Heightmap;
-		sampler2D _Splatmap;
-		sampler2D _Normalmap;
+		SamplerState s_point_clamp;
+		SamplerState s_linear_wrap;
+		SamplerState s_trilinear_repeat;
 
-		sampler2D _MainTex0;
-		sampler2D _Detail0;
-		sampler2D _Normal0;
-		sampler2D _MainTex1;
-		sampler2D _Detail1;
-		sampler2D _Normal1;
-		sampler2D _MainTex2;
-		sampler2D _Detail2;
-		sampler2D _Normal2;
-		sampler2D _MainTex3;
-		sampler2D _Detail3;
-		sampler2D _Normal3;
+		Texture2D _Heightmap;
+		Texture2D _Splatmap;
+		Texture2D _Normalmap;
+
+		Texture2D _MainTex0;
+		Texture2D _Detail0;
+		Texture2D _Normal0;
+		Texture2D _MainTex1;
+		Texture2D _Detail1;
+		Texture2D _Normal1;
+		Texture2D _MainTex2;
+		Texture2D _Detail2;
+		Texture2D _Normal2;
+		Texture2D _MainTex3;
+		Texture2D _Detail3;
+		Texture2D _Normal3;
 
 		struct Input 
 		{
@@ -138,9 +141,9 @@ Shader "Custom/TerrainChunk"
 			UNITY_TRANSFER_INSTANCE_ID(v, o);
 			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
+			float height = LOAD_TEXTURE2D_LOD(_Heightmap, _ChunkTextureSize * v.texcoord.xy, 0).r;
 			v.vertex.y += height * _HeightmapScale;
-			float3 normal = tex2Dlod(_Normalmap, float4(v.texcoord.xy, 0, 0)).xyz;
+			float3 normal = LOAD_TEXTURE2D_LOD(_Normalmap, _ChunkTextureSize * v.texcoord.xy, 0).xyz;
 			normal = normal * 2 - 1;
 			v.normal = normal;
 
@@ -220,19 +223,28 @@ Shader "Custom/TerrainChunk"
 			SurfaceOutputStandard o;
 	#endif
 
+
 			// Surface
-			float2 uv = surfIN.uv_Splatmap;
+			float2 uv = IN.texcoord;
 			float2 position = _Sector.xy + uv;
 
-			float height = tex2D(_Heightmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).x;
-			float3 normalmap = tex2D(_Normalmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).xyz;
+			float height = LOAD_TEXTURE2D_LOD(_Heightmap, _ChunkTextureSize * IN.texcoord, 0).r;
+			float3 normalmap = LOAD_TEXTURE2D_LOD(_Normalmap, _ChunkTextureSize * IN.texcoord, 0);
 			float3 normal = normalmap * 2 - 1;
-			float4 splat = tex2D(_Splatmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw);
+			float4 splat = LOAD_TEXTURE2D_LOD(_Splatmap, _ChunkTextureSize * IN.texcoord, 0);
+
+			if (length(splat) < 0.5)
+				splat = abs(float4(
+					snoise(position * 2),
+					snoise(position * 3),
+					snoise(position * 4),
+					snoise(position * 5)
+				));
 
 #define DECODE_LAYER(index)\
-			float3 MERGE_NAME(albedo, index) = tex2D(MERGE_NAME(_MainTex, index), uv * MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.zw)).xyz;\
-			float3 MERGE_NAME(detail, index) = tex2D(MERGE_NAME(_Detail, index), uv * MERGE_NAME(MERGE_NAME(_Detail, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_Detail, index), _ST.zw)).xyz;\
-			float3 MERGE_NAME(normalmap, index) = tex2D(MERGE_NAME(_Normal, index), uv * MERGE_NAME(MERGE_NAME(_Normal, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_Normal, index), _ST.zw)).xyz;\
+			float3 MERGE_NAME(albedo, index) = MERGE_NAME(_MainTex, index).Sample(s_trilinear_repeat, uv * MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.zw)).xyz;\
+			float3 MERGE_NAME(detail, index) = MERGE_NAME(_Detail, index).Sample(s_trilinear_repeat,uv * MERGE_NAME(MERGE_NAME(_Detail, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_Detail, index), _ST.zw)).xyz;\
+			float3 MERGE_NAME(normalmap, index) = MERGE_NAME(_Normal, index).Sample(s_trilinear_repeat,uv * MERGE_NAME(MERGE_NAME(_Normal, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_Normal, index), _ST.zw)).xyz;\
 			float3 MERGE_NAME(normal, index) = MERGE_NAME(normalmap, index) * 2 - 1;
 
 			DECODE_LAYER(0)
@@ -267,6 +279,9 @@ Shader "Custom/TerrainChunk"
 			o.Emission = 0.0;
 			o.Occlusion = 1.0;
 			// End surface
+
+			// For debug
+			//return float4(normal * 0.5 + 0.5, 1);
 
 
 
