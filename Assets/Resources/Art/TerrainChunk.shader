@@ -7,19 +7,19 @@
 		_HeightmapScale("Heightmap Scale", Float) = 100
 
 		_MainTex0 ("Albedo 1 (RGB)", 2D) = "white" {}
-		_NormalTex0 ("Normal 1", 2D) = "white" {}
+		_Normal0 ("Normal 1", 2D) = "white" {}
 		_Detail0("Detail 1 (RGB)", 2D) = "white" {}
 
 		_MainTex1("Albedo 2 (RGB)", 2D) = "white" {}
-		_NormalTex1("Normal 2", 2D) = "white" {}
+		_Normal1("Normal 2", 2D) = "white" {}
 		_Detail1("Detail 2 (RGB)", 2D) = "white" {}
 
 		_MainTex2("Albedo 3 (RGB)", 2D) = "white" {}
-		_NormalTex2("Normal 3", 2D) = "white" {}
+		_Normal2("Normal 3", 2D) = "white" {}
 		_Detail2("Detail 3 (RGB)", 2D) = "white" {}
 
 		_MainTex3("Albedo 4 (RGB)", 2D) = "white" {}
-		_NormalTex3("Normal 4", 2D) = "white" {}
+		_Normal3("Normal 4", 2D) = "white" {}
 		_Detail3("Detail 4 (RGB)", 2D) = "white" {}
 
 		_Splatmap("Splat Map", 2D) = "white" {}
@@ -122,6 +122,14 @@
 			float4 splat = tex2D(_Splatmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw);
 
 			// Temporary
+			//splat = normalize(
+			//	float4(
+			//		abs(snoise(position * 2) * 2 - 1),
+			//		abs(snoise(position * 3)),
+			//		abs(snoise(position * 4)),
+			//		abs(snoise(position * 5))
+			//	)
+			//);
 			splat = float4(1, 0, 0, 0);
 			// End
 
