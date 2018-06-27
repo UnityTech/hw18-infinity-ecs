@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 
 namespace Unity.InfiniteWorld
 {
+    [UpdateAfter(typeof(TransformSystem))]
     public class MeshRenderSystem : ComponentSystem
     {
         ComponentGroup renderGroup;

@@ -3,7 +3,7 @@
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
-		_HeightmapScale("Heightmap Scale", Float) = 100
+		_HeightmapScale("Heightmap Scale", Float) = 50
 		_Heightmap ("Heightmap", 2D) = "black" {}
 		_MainTex0 ("Albedo 1 (RGB)", 2D) = "white" {}
 		_NormalTex0 ("Normal 1", 2D) = "white" {}
