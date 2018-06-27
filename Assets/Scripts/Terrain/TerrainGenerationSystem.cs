@@ -199,16 +199,16 @@ namespace Unity.InfiniteWorld
 
                 //THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE
                 // Texture[0] GROUND (under 20%)
-                var w0 = 0.2f;// Mathf.Clamp01((terrainData.heightmapHeight - height));
+                var w0 = 0.5f;// Mathf.Clamp01((terrainData.heightmapHeight - height));
 
                 //// Texture[1] GRASS (decreases with scope)
-                var w1 = scope;// Mathf.Clamp01((terrainData.heightmapHeight - height));
+                var w1 = 1f;// scope;// Mathf.Clamp01((terrainData.heightmapHeight - height));
 
                 //// Texture[2] ROCKS (increases with scope)
-                var w2 = 1.0f - scope;// 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
+                var w2 = 0f; // 1.0f - scope;// 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
 
                 //// Texture[3] SNOW (above 75%)
-                var w3 = (height > 0.5f) ? 1.5f : 0f;// height * Mathf.Clamp01(normal.z);
+                var w3 = 0f; //(height > 0.5f) ? 0.5f : 0f;// height * Mathf.Clamp01(normal.z);
 
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 var w = new float4(w0, w1, w2, w3);
