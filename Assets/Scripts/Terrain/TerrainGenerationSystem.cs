@@ -42,17 +42,37 @@ namespace Unity.InfiniteWorld
             }
         }
 
-        struct GenerateNormalmapJob : IJobParallelForBatch
+        struct GenerateNormalmapJob : IJobParallelFor
         {
-            [ReadOnly] public Sector Sector;
+            [ReadOnly] public NativeArray<float> Heightmap;
             [WriteOnly] public NativeArray<float4> Normalmap;
 
-            public void Execute(int startIndex, int count)
+            public void Execute(int i)
             {
 
-                // Calcul normal map
+                    // Calcul normal map
+                    var x = i / WorldChunkConstants.ChunkSize;
+                    var y = i % WorldChunkConstants.ChunkSize;
+
+                    var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+
+                    var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
+                    var xRight = x1 + y * WorldChunkConstants.ChunkSize;
+                    var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
+                    var yDown = x + y1 * WorldChunkConstants.ChunkSize;
+                    var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
+                    var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
+
+                    var luma = new float4(dx, dy, 1, 1);
+                    Normalmap[i] = luma;
+                
             }
         }
+
+
 
         struct TriggeredSectors
         {
@@ -137,13 +157,13 @@ namespace Unity.InfiniteWorld
 
                         var job2 = new GenerateNormalmapJob
                         {
-                            Sector = sector,
+                            Heightmap = heightmap,
                             Normalmap = normalmap
                         };
 
-                        thisChunkJob = job2.ScheduleBatch(
+                        thisChunkJob = job2.Schedule(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            1,
+                            64,
                             thisChunkJob
                         );
                     }
