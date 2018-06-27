@@ -9,6 +9,15 @@ namespace Unity.InfiniteWorld
 {
     public class TransformSystem : JobComponentSystem
     {
+        struct SectorShiftFilter
+        {
+            public ComponentDataArray<Sector> sectors;
+            public ComponentDataArray<Shift> shifts;
+        }
+
+        [Inject]
+        SectorShiftFilter sectorShiftFilter;
+
         struct TransformSectorFilter
         {
             [WriteOnly]
@@ -55,10 +64,23 @@ namespace Unity.InfiniteWorld
         TransformSectorShiftRotationFilter transformSectorShiftRotationGroup;
 
         [Inject]
-        WorldCamera camera;
+        CameraSystem camera;
+
+        struct ShiftSectorUpdateJob: IJobParallelFor
+        {
+            public ComponentDataArray<Shift> shifts;
+            public ComponentDataArray<Sector> sectors;
+
+            public void Execute(int index)
+            {
+                var shift = shifts[index].value;
+                sectors[index] = new Sector(sectors[index].value + new int2((int)(shift.x / WorldChunkConstants.ChunkSize), (int)(shift.z / WorldChunkConstants.ChunkSize)));
+                shifts[index] = new Shift(new float3(shift.x % WorldChunkConstants.ChunkSize, shift.y, shift.z % WorldChunkConstants.ChunkSize));
+            }
+        }
 
         [BurstCompile]
-        struct TransformSectorJob: IJobParallelFor
+        struct TransformSectorJob : IJobParallelFor
         {
             [ReadOnly]
             public int2 cameraSector;
@@ -121,6 +143,23 @@ namespace Unity.InfiniteWorld
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
+            var cameraSector = EntityManager.GetComponentData<Sector>(camera.main);
+
+            // Entities with Sector only
+            JobHandle shiftUpdateJobHandle;
+            {
+                var shifts = sectorShiftFilter.shifts;
+                var sectors = sectorShiftFilter.sectors;
+
+                var updateShiftJob = new ShiftSectorUpdateJob
+                {
+                    sectors = sectors,
+                    shifts = shifts
+                };
+
+                shiftUpdateJobHandle = updateShiftJob.Schedule(shifts.Length, 4, inputDeps);
+            }
+
             // Entities with Sector only
             JobHandle sectorJobHandle;
             {
@@ -129,12 +168,12 @@ namespace Unity.InfiniteWorld
 
                 var transformJob = new TransformSectorJob
                 {
-                    cameraSector = camera.sector,
+                    cameraSector = cameraSector.value,
                     sectors = sectors,
                     transforms = transforms
                 };
 
-                sectorJobHandle = transformJob.Schedule(transforms.Length, 4, inputDeps);
+                sectorJobHandle = transformJob.Schedule(transforms.Length, 4, shiftUpdateJobHandle);
             }
 
             // Entities with Sector and Shift only
@@ -146,7 +185,7 @@ namespace Unity.InfiniteWorld
 
                 var transformJob = new TransformSectorShiftJob
                 {
-                    cameraSector = camera.sector,
+                    cameraSector = cameraSector.value,
                     sectors = sectors,
                     shifts = shifts,
                     transforms = transforms
@@ -165,7 +204,7 @@ namespace Unity.InfiniteWorld
 
                 var transformJob = new TransformSectorShiftRotationJob
                 {
-                    cameraSector = camera.sector,
+                    cameraSector = cameraSector.value,
                     sectors = sectors,
                     shifts = shifts,
                     rotations = rotations,

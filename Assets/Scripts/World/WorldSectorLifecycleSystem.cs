@@ -23,7 +23,7 @@ namespace Unity.InfiniteWorld
         ObjectsFilter objectsFilter;
 
         [Inject]
-        WorldCamera camera;
+        CameraSystem camera;
 
         EntityArchetype archetype;
 
@@ -34,8 +34,11 @@ namespace Unity.InfiniteWorld
 
         protected override void OnUpdate()
         {
+            var cameraSector = EntityManager.GetComponentData<Sector>(camera.main);
+
             // Remove anything outside ObjectsUnloadDistance radius
-            camera.AddRemoveGrid(
+            CameraSystem.AddRemoveGrid(
+                cameraSector.value,
                 WorldChunkConstants.ObjectsUnloadDistance, 
                 ref objectsFilter.sectors, 
                 (int2 sector) => { }, 
@@ -47,7 +50,8 @@ namespace Unity.InfiniteWorld
             );
 
             // Add any missing sector inside ObjectsVisibleDistance radius
-            camera.AddRemoveGrid(
+            CameraSystem.AddRemoveGrid(
+                cameraSector.value,
                 WorldChunkConstants.ObjectsVisibleDistance,
                 ref objectsFilter.sectors,
                 (int2 sector) =>

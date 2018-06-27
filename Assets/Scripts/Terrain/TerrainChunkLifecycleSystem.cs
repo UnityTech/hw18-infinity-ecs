@@ -32,22 +32,21 @@ namespace Unity.InfiniteWorld
 
         EntityArchetype archetype;
 
-        Camera camera;
+        [Inject]
+        CameraSystem camera;
 
-        public void Init(Camera _camera)
+        protected override void OnCreateManager(int capacity)
         {
-            camera = _camera;
             archetype = EntityManager.CreateArchetype(typeof(Sector), typeof(LOD), typeof(Transform), typeof(TerrainChunkGeneratorTrigger));
         }
 
         protected unsafe override void OnUpdate()
         {
+            var cameraSector = EntityManager.GetComponentData<Sector>(camera.main).value;
+
             var sectors = chunksGroup.sectors;
             var entities = chunksGroup.entities;
 
-            var camPos = camera.transform.position;
-            float2 cameraXY = new float2(camPos.x, camPos.z);
-            int2 cameraSector = new int2((int)(cameraXY.x / Sector.SECTOR_SIZE + 0.5f), (int)(cameraXY.y / Sector.SECTOR_SIZE + 0.5f));
             int2 distOffset = new int2(VISIBILITY, VISIBILITY);
             int2 baseSector = cameraSector - distOffset;
 
