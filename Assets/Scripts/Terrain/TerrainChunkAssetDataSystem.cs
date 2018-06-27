@@ -17,6 +17,9 @@ namespace Unity.InfiniteWorld
 
             public NativeArray<float4> Normalmap;
             public Texture2D NormalmapTex;
+
+            public NativeArray<float4> Splatmap;
+            public Texture2D SplatmapTex;
         }
 
         Dictionary<int2, AssetData> m_CPUDataBySector;
@@ -24,6 +27,7 @@ namespace Unity.InfiniteWorld
         List<int> m_FreedIndices;
         int m_NextIndex;
 
+        //HeightMap
         public NativeArray<float> GetChunkHeightmap(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).Heightmap;
@@ -33,7 +37,7 @@ namespace Unity.InfiniteWorld
         {
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
         }
-
+        //NormalMap
         public NativeArray<float4> GetChunkNormalmap(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).Normalmap;
@@ -42,6 +46,16 @@ namespace Unity.InfiniteWorld
         public Texture2D GetChunkNormalmapTex(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).NormalmapTex;
+        }
+        //SplatMap
+        public NativeArray<float4> GetChunkSplatmap(Sector sector)
+        {
+            return GetOrCreateChunkAssetData(sector).Splatmap;
+        }
+
+        public Texture2D GetChunkSplatmapTex(Sector sector)
+        {
+            return GetOrCreateChunkAssetData(sector).SplatmapTex;
         }
 
         public void DisposeChunkData(Sector sector)
@@ -97,6 +111,17 @@ namespace Unity.InfiniteWorld
                         WorldChunkConstants.ChunkSize,
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
+                    ),
+
+                    Splatmap = new NativeArray<float4>(
+                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
+                        Allocator.Persistent
+                    ),
+                    SplatmapTex = new Texture2D(
+                        WorldChunkConstants.ChunkSize,
+                        WorldChunkConstants.ChunkSize,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
+                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     )
 
                 };
@@ -113,6 +138,8 @@ namespace Unity.InfiniteWorld
             UnityEngine.Object.Destroy(data.HeightmapTex);
             data.Normalmap.Dispose();
             UnityEngine.Object.Destroy(data.NormalmapTex);
+            data.Splatmap.Dispose();
+            UnityEngine.Object.Destroy(data.SplatmapTex);
         }
     }
 }
