@@ -235,7 +235,7 @@ PlayerSettings:
   appleEnableAutomaticSigning: 0
   iOSRequireARKit: 0
   appleEnableProMotion: 0
-  vulkanEditorSupport: 1
+  vulkanEditorSupport: 0
   clonedFromGUID: 0ea352821057f29478bc5a4fd7d4e8e1
   templatePackageId: com.unity.3d@1.0.1
   templateDefaultScene: Assets/Scenes/SampleScene.unity
@@ -295,7 +295,7 @@ PlayerSettings:
     m_Automatic: 1
   - m_BuildTarget: WindowsStandaloneSupport
     m_APIs: 1500000002000000
-    m_Automatic: 0
+    m_Automatic: 1
   m_BuildTargetVRSettings:
   - m_BuildTarget: Standalone
     m_Enabled: 0
