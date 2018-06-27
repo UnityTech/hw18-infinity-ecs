@@ -18,15 +18,27 @@ namespace Unity.InfiniteWorld
             public void Execute(int i)
             {
                 var y = i / WorldChunkConstants.ChunkSize;
-                var x = i % WorldChunkConstants.ChunkSize; 
-                var luma = noise.snoise(
-                    new float2(
-                        x / (float)(WorldChunkConstants.ChunkSize - 1),
-                        y / (float)(WorldChunkConstants.ChunkSize - 1)
-                    )
-                    + Sector.value
-                );
-                Heightmap[i] = luma;
+                var x = i % WorldChunkConstants.ChunkSize;
+
+                float scale = (float)(WorldChunkConstants.ChunkSize - 1);
+                float multiplier = 0.8f;
+                float persistence = 0.5f;
+                int octaves = 4;
+                float2 sector = new float2(Sector.value);
+                float sectorScale = 1.0f;
+
+                float2 xy = new float2(x / scale, y / scale);
+
+                float value = 0.0f;
+                for (int j = 0; j < octaves; ++j)
+                {
+                    value += noise.snoise((xy + sector) * sectorScale) * multiplier;
+
+                    sectorScale *= 2.0f;
+                    multiplier *= persistence;
+                }
+
+                Heightmap[i] = value;
             }
         }
 
