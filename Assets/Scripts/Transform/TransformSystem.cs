@@ -3,12 +3,13 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Unity.InfiniteWorld
 {
-    public class TransformSystem : ComponentSystem
+    public class TransformSystem : JobComponentSystem
     {
-        struct TransformSectorGroup
+        struct TransformSectorFilter
         {
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
@@ -20,9 +21,9 @@ namespace Unity.InfiniteWorld
         }
 
         [Inject]
-        TransformSectorGroup transformsSectorGroup;
+        TransformSectorFilter transformsSectorGroup;
 
-        struct TransformPosGroup
+        struct TransformSectorShiftFilter
         {
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
@@ -34,9 +35,9 @@ namespace Unity.InfiniteWorld
         }
 
         [Inject]
-        TransformPosGroup transformsPosGroup;
+        TransformSectorShiftFilter transformsSectorShiftGroup;
 
-        struct TransformPosRotGroup
+        struct TransformSectorShiftRotationFilter
         {
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
@@ -48,73 +49,130 @@ namespace Unity.InfiniteWorld
         }
 
         [Inject]
-        TransformPosRotGroup transformsPosRotGroup;
+        TransformSectorShiftRotationFilter transformSectorShiftRotationGroup;
 
-        /*
+        [Inject]
+        WorldCamera camera;
+
         [BurstCompile]
-        struct UpdateTransformPosRot: IJobParallelFor
+        struct TransformSectorJob: IJobParallelFor
         {
             [ReadOnly]
-            public ComponentDataArray<Position> positions;
+            public int2 cameraSector;
             [ReadOnly]
-            public ComponentDataArray<Rotation> rotations;
+            public ComponentDataArray<Sector> sectors;
+
             public ComponentDataArray<Transform> transforms;
 
             public void Execute(int index)
             {
-                Position pos = positions[index];
-                float4x4 matrix = math.rottrans(rotations[index].rotation, positions[index].shift + new float3(pos.sector.x * Position.SECTOR_SIZE, 0, pos.sector.y * Position.SECTOR_SIZE));
+                int2 sector = sectors[index].value - cameraSector;
+                float4x4 matrix = math.translate(new float3(sector.x * Sector.SECTOR_SIZE, 0, sector.y * Sector.SECTOR_SIZE));
                 transforms[index] = new Transform(matrix);
             }
         }
-        */
 
-        protected override void OnUpdate()
+        [BurstCompile]
+        struct TransformSectorShiftJob : IJobParallelFor
+        {
+            [ReadOnly]
+            public int2 cameraSector;
+            [ReadOnly]
+            public ComponentDataArray<Sector> sectors;
+            [ReadOnly]
+            public ComponentDataArray<Shift> shifts;
+
+            public ComponentDataArray<Transform> transforms;
+
+            public void Execute(int index)
+            {
+                float3 shift = shifts[index].value;
+                int2 sector = sectors[index].value - cameraSector;
+                float4x4 matrix = math.translate(shift + new float3(sector.x * Sector.SECTOR_SIZE, 0, sector.y * Sector.SECTOR_SIZE));
+                transforms[index] = new Transform(matrix);
+            }
+        }
+
+        [BurstCompile]
+        struct TransformSectorShiftRotationJob : IJobParallelFor
+        {
+            [ReadOnly]
+            public int2 cameraSector;
+            [ReadOnly]
+            public ComponentDataArray<Sector> sectors;
+            [ReadOnly]
+            public ComponentDataArray<Shift> shifts;
+            [ReadOnly]
+            public ComponentDataArray<Rotation> rotations;
+
+            public ComponentDataArray<Transform> transforms;
+
+            public void Execute(int index)
+            {
+                float3 shift = shifts[index].value;
+                int2 sector = sectors[index].value - cameraSector;
+                float4x4 matrix = math.rottrans(rotations[index].rotation, shift + new float3(sector.x * Sector.SECTOR_SIZE, 0, sector.y * Sector.SECTOR_SIZE));
+                transforms[index] = new Transform(matrix);
+            }
+        }
+
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
             // Entities with Sector only
+            JobHandle sectorJobHandle;
             {
                 var transforms = transformsSectorGroup.transforms;
                 var sectors = transformsSectorGroup.sectors;
 
-                for (int index = 0; index < transforms.Length; index++)
+                var transformJob = new TransformSectorJob
                 {
-                    Sector sector = sectors[index];
-                    float4x4 matrix = math.translate(new float3(sector.value.x * Sector.SECTOR_SIZE, 0, sector.value.y * Sector.SECTOR_SIZE));
-                    transforms[index] = new Transform(matrix);
-                }
+                    cameraSector = camera.sector,
+                    sectors = sectors,
+                    transforms = transforms
+                };
+
+                sectorJobHandle = transformJob.Schedule(transforms.Length, 4, inputDeps);
             }
 
-            // Entities with Position only
+            // Entities with Sector and Shift only
+            JobHandle sectorShiftJobHandle;
             {
-                var transforms = transformsPosGroup.transforms;
-                var sectors = transformsPosGroup.sectors;
-                var shifts = transformsPosGroup.shifts;
+                var transforms = transformsSectorShiftGroup.transforms;
+                var sectors = transformsSectorShiftGroup.sectors;
+                var shifts = transformsSectorShiftGroup.shifts;
 
-                for (int index = 0; index < transforms.Length; index++)
+                var transformJob = new TransformSectorShiftJob
                 {
-                    Shift shift = shifts[index];
-                    Sector sector = sectors[index];
-                    float4x4 matrix = math.translate(shift.value + new float3(sector.value.x * Sector.SECTOR_SIZE, 0, sector.value.y * Sector.SECTOR_SIZE));
-                    transforms[index] = new Transform(matrix);
-                }
+                    cameraSector = camera.sector,
+                    sectors = sectors,
+                    shifts = shifts,
+                    transforms = transforms
+                };
+
+                sectorShiftJobHandle = transformJob.Schedule(transforms.Length, 4, sectorJobHandle);
             }
 
             // Entities with Position + Rotation
+            JobHandle sectorShiftRotationJobHandle;
             {
-                var transforms = transformsPosRotGroup.transforms;
-                var sectors = transformsPosGroup.sectors;
-                var shifts = transformsPosGroup.shifts;
-                var rotations = transformsPosRotGroup.rotations;
+                var transforms = transformSectorShiftRotationGroup.transforms;
+                var sectors = transformSectorShiftRotationGroup.sectors;
+                var shifts = transformSectorShiftRotationGroup.shifts;
+                var rotations = transformSectorShiftRotationGroup.rotations;
 
-                for (int index = 0; index < transforms.Length; index++)
+                var transformJob = new TransformSectorShiftRotationJob
                 {
-                    Shift shift = shifts[index];
-                    Sector sector = sectors[index];
-                    float4x4 matrix = math.rottrans(rotations[index].rotation, shift.value + new float3(sector.value.x * Sector.SECTOR_SIZE, 0, sector.value.y * Sector.SECTOR_SIZE));
-                    transforms[index] = new Transform(matrix);
-                }
+                    cameraSector = camera.sector,
+                    sectors = sectors,
+                    shifts = shifts,
+                    rotations = rotations,
+                    transforms = transforms
+                };
+
+                sectorShiftRotationJobHandle = transformJob.Schedule(transforms.Length, 4, sectorShiftJobHandle);
             }
 
+            return sectorShiftRotationJobHandle;
         }
     }
 }
