@@ -112,7 +112,7 @@ namespace Unity.InfiniteWorld
 
             float mountainDetails = noisex.ridge(sector.value, uv, 5, 0.6f, mountainSectorScale, 0.5f, 0.45f);
 
-            float height = mountainDetails * mountainWeight;
+            float height = mountainDetails * mountainWeight * 3;
 
             return height;
         }
