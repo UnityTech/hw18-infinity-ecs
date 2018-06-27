@@ -18,29 +18,61 @@ namespace Unity.InfiniteWorld
             public void Execute(int i)
             {
                 var y = i / WorldChunkConstants.ChunkSize;
-                var x = i % WorldChunkConstants.ChunkSize; 
-                var luma = noise.snoise(
-                    new float2(
-                        x / (float)(WorldChunkConstants.ChunkSize - 1),
-                        y / (float)(WorldChunkConstants.ChunkSize - 1)
-                    )
-                    + Sector.value
-                );
-                Heightmap[i] = luma;
+                var x = i % WorldChunkConstants.ChunkSize;
+
+                float scale = (float)(WorldChunkConstants.ChunkSize - 1);
+                float multiplier = 0.8f;
+                float persistence = 0.5f;
+                int octaves = 4;
+                float2 sector = new float2(Sector.value);
+                float sectorScale = 1.0f;
+
+                float2 xy = new float2(x / scale, y / scale);
+
+                float value = 0.0f;
+                for (int j = 0; j < octaves; ++j)
+                {
+                    value += noise.snoise((xy + sector) * sectorScale) * multiplier;
+
+                    sectorScale *= 2.0f;
+                    multiplier *= persistence;
+                }
+
+                Heightmap[i] = value;
             }
         }
 
-        struct GenerateNormalmapJob : IJobParallelForBatch
+        struct GenerateNormalmapJob : IJobParallelFor
         {
-            [ReadOnly] public Sector Sector;
+            [ReadOnly] public NativeArray<float> Heightmap;
             [WriteOnly] public NativeArray<float4> Normalmap;
 
-            public void Execute(int startIndex, int count)
+            public void Execute(int i)
             {
 
-                // Calcul normal map
+                    // Calcul normal map
+                    var x = i / WorldChunkConstants.ChunkSize;
+                    var y = i % WorldChunkConstants.ChunkSize;
+
+                    var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                    var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+
+                    var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
+                    var xRight = x1 + y * WorldChunkConstants.ChunkSize;
+                    var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
+                    var yDown = x + y1 * WorldChunkConstants.ChunkSize;
+                    var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
+                    var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
+
+                    var luma = new float4(dx, dy, 1, 1);
+                    Normalmap[i] = luma;
+                
             }
         }
+
+
 
         struct TriggeredSectors
         {
@@ -125,13 +157,13 @@ namespace Unity.InfiniteWorld
 
                         var job2 = new GenerateNormalmapJob
                         {
-                            Sector = sector,
+                            Heightmap = heightmap,
                             Normalmap = normalmap
                         };
 
-                        thisChunkJob = job2.ScheduleBatch(
+                        thisChunkJob = job2.Schedule(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            1,
+                            64,
                             thisChunkJob
                         );
                     }
