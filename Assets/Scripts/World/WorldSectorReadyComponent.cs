@@ -2,7 +2,7 @@
 
 namespace Unity.InfiniteWorld
 {
-    struct WorldChunkGeneratorTrigger : IComponentData
+    struct WorldSectorReady : IComponentData
     {
     }
 }
