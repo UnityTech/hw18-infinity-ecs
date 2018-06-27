@@ -3,40 +3,68 @@
 		_Glossiness ("Smoothness", Range(0,1)) = 0.5
 		_Metallic ("Metallic", Range(0,1)) = 0.0
 		_HeightmapScale("Heightmap Scale", Float) = 100
+
 		_MainTex0 ("Albedo 1 (RGB)", 2D) = "white" {}
 		_NormalTex0 ("Normal 1", 2D) = "white" {}
+
+		_MainTex1("Albedo 2 (RGB)", 2D) = "white" {}
+		_NormalTex1("Normal 2", 2D) = "white" {}
+
+		_MainTex2("Albedo 3 (RGB)", 2D) = "white" {}
+		_NormalTex2("Normal 3", 2D) = "white" {}
+
+		_MainTex3("Albedo 4 (RGB)", 2D) = "white" {}
+		_NormalTex3("Normal 4", 2D) = "white" {}
+
+		_Splatmap("Splat Map", 2D) = "white" {}
  	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
 		LOD 200
 
 		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
 		#pragma surface surf Standard fullforwardshadows vertex:vert
-
-		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+		#pragma target 4.6
+		#pragma only_renderers d3d11 ps4 xboxone vulkan metal switch
 
 		#include "noiseSimplex.cginc"
 
+		#define MERGE_NAME(A, B) A ## B
+
+		CBUFFER_START(MaterialLayers)
+			float4 _Normalmap_ST;
+			float4 _MainTex0_ST;
+			float4 _Normal0_ST;
+			float4 _MainTex1_ST;
+			float4 _Normal1_ST;
+			float4 _MainTex2_ST;
+			float4 _Normal2_ST;
+			float4 _MainTex3_ST;
+			float4 _Normal3_ST;
+
+			half _Glossiness;
+			half _Metallic;
+
+			float4 _Sector;
+			float _HeightmapScale;
+		CBUFFER_END
+
 		sampler2D _Heightmap;
+		sampler2D _Splatmap;
 		sampler2D _Normalmap;
-		float4 _Normalmap_ST;
 
 		sampler2D _MainTex0;
-		float4 _MainTex0_ST;
 		sampler2D _Normal0;
-		float4 _Normal0_ST;
-
-		float4 _Sector;
+		sampler2D _MainTex1;
+		sampler2D _Normal1;
+		sampler2D _MainTex2;
+		sampler2D _Normal2;
+		sampler2D _MainTex3;
+		sampler2D _Normal3;
 
 		struct Input {
-			float2 uv_MainTex0_ST;
+			float2 uv_Splatmap;
 		};
-
-		half _Glossiness;
-		half _Metallic;
-		float _HeightmapScale;
 
 		void vert(inout appdata_full v) {
 			float height = tex2Dlod(_Heightmap, float4(v.texcoord.xy, 0, 0));
@@ -46,38 +74,74 @@
 			v.normal = normal;
 		}
 
-		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-		// #pragma instancing_options assumeuniformscaling
 		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
-		void material0Update(float2 position, inout float3 albedo, inout float3 normal0)
+		void materialLayer(
+			float2 position, 
+			float height,
+			float splat,
+			float3 normal,
+			float3 layerAlbedo,
+			float3 layerNormalmap,
+			float3 layerNormal,
+			inout float3 albedo
+		)
 		{
-			float albedoNoise = snoise(position);
-			albedoNoise = albedoNoise * 0.3 + 0.7;
-			albedo *= albedoNoise;
+			albedo += layerAlbedo * splat;
+
+			//float albedoNoise = snoise(position);
+			//albedoNoise = albedoNoise * 0.3 + 0.7;
+			//albedo *= albedoNoise;
 		}
 
 		void surf (Input IN, inout SurfaceOutputStandard o) 
 		{
-			float2 uv = IN.uv_MainTex0_ST;
+			float2 uv = IN.uv_Splatmap;
 			float2 position = _Sector.xy + uv;
 
-			float3 normal = tex2D(_Normalmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).xyz;
-			float3 albedo0 = tex2D(_MainTex0, uv * _MainTex0_ST.xy + _MainTex0_ST.zw).xyz;
-			float3 normal0 = tex2D(_Normal0, uv * _Normal0_ST.xy + _Normal0_ST.zw).xyz;
-			normal0 = normalize(float3(normal0.xy + normal.xy, normal.z));
-			material0Update(position, albedo0, normal0);
+			float height = tex2D(_Heightmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).x;
+			float3 normalmap = tex2D(_Normalmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw).xyz;
+			float3 normal = normalmap * 2 - 1;
+			float4 splat = tex2D(_Splatmap, uv * _Normalmap_ST.xy + _Normalmap_ST.zw);
+
+			// Temporary
+			splat = float4(0, 0, 1, 0);
+			// End
+
+#define DECODE_LAYER(index)\
+			float3 MERGE_NAME(albedo, index) = tex2D(MERGE_NAME(_MainTex, index), uv * MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_MainTex, index), _ST.zw)).xyz;\
+			float3 MERGE_NAME(normalmap, index) = tex2D(MERGE_NAME(_Normal, index), uv * MERGE_NAME(MERGE_NAME(_Normal, index), _ST.xy) + MERGE_NAME(MERGE_NAME(_Normal, index), _ST.zw)).xyz;\
+			float3 MERGE_NAME(normal, index) = MERGE_NAME(normalmap, index) * 2 - 1;
+
+			DECODE_LAYER(0)
+			DECODE_LAYER(1)
+			DECODE_LAYER(2)
+			DECODE_LAYER(3)
+#undef DECODE_LAYER
+
+			float3 albedo = float3(0, 0, 0);
+			materialLayer(position, height, splat[0], normal, albedo0, normalmap0, normal0, albedo);
+			materialLayer(position, height, splat[1], normal, albedo1, normalmap1, normal1, albedo);
+			materialLayer(position, height, splat[2], normal, albedo2, normalmap2, normal2, albedo);
+			materialLayer(position, height, splat[3], normal, albedo3, normalmap3, normal3, albedo);
+
+			normalmap = normalize(float3(
+				normalmap0.xy * splat.x
+				+ normalmap1.xy * splat.y
+				+ normalmap2.xy * splat.z
+				+ normalmap3.xy * splat.w
+				+ normalmap.xy,
+				normalmap.z
+				));
 
 			// Albedo comes from a texture tinted by color
-			o.Albedo = albedo0.rgb;
+			o.Albedo = albedo.rgb;
 			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
 			o.Alpha = 1;
-			//o.Normal = normal * 2 - 1;
+			o.Normal = normalmap * 2 - 1;
 		}
 		ENDCG
 	}
