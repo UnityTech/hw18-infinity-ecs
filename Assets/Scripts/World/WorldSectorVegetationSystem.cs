@@ -7,23 +7,19 @@ using UnityEngine.Assertions;
 
 namespace Unity.InfiniteWorld
 {
-    public class VegetationChunkSystem : ComponentSystem
+    public class WorldSectorVegetationSystem : ComponentSystem
     {
         // chunks that are visible, have heightmap and doesn't have VegetationComponent
-        struct ChunkGroup
+        struct CreateEventsFilter
         {
             [ReadOnly]
             public EntityArray entities;
             [ReadOnly]
-            public ComponentDataArray<Sector> sectors;
-            [ReadOnly]
-            public ComponentDataArray<TerrainChunkHasHeightmap> lods;
-            [ReadOnly]
-            public SubtractiveComponent<TerrainChunkHasVegetation> vegetationTag;
+            public ComponentDataArray<WorldSectorVegetationCreateEvent> events;
         }
 
         [Inject]
-        ChunkGroup chunkGroup;
+        CreateEventsFilter eventsFilter;
 
         [Inject]
         TerrainChunkAssetDataSystem dataSystem;
@@ -35,7 +31,7 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender));
+            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
             var test = Resources.Load<GameObject>("Art/Tree 01");
             testMesh = test.GetComponent<MeshFilter>().sharedMesh;
@@ -44,14 +40,15 @@ namespace Unity.InfiniteWorld
 
         protected override void OnUpdate()
         {
-            for(int temp = 0; temp < chunkGroup.sectors.Length; ++temp)
+            for(int temp = 0; temp < eventsFilter.events.Length; ++temp)
             {
+                Debug.Log("GENERATE: " + eventsFilter.events[temp].sector.x + ":" + eventsFilter.events[temp].sector.y);
+
                 // Just create 10 trees in random position inside a sector
                 for (int i = 0; i < 10; ++i)
-                    CreateEntity(chunkGroup.sectors[temp]);
+                    CreateEntity(new Sector(eventsFilter.events[temp].sector));
 
-                var entity = chunkGroup.entities[temp];
-                PostUpdateCommands.AddComponent(entity, new TerrainChunkHasVegetation());
+                PostUpdateCommands.DestroyEntity(eventsFilter.entities[temp]);
             }
         }
 

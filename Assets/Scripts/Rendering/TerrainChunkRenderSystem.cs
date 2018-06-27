@@ -16,6 +16,7 @@ namespace Unity.InfiniteWorld
         public static readonly int _Heightmap = Shader.PropertyToID("_Heightmap");
         public static readonly int _Normalmap = Shader.PropertyToID("_Normalmap");
         public static readonly int _Sector = Shader.PropertyToID("_Sector");
+        public static readonly int _HeightmapScale = Shader.PropertyToID("_HeightmapScale");
 
         // Universal material & mesh for all chunks
         Mesh gridMesh;
@@ -59,6 +60,7 @@ namespace Unity.InfiniteWorld
                 materialBlock.SetTexture(_Heightmap, heightmap);
                 materialBlock.SetTexture(_Normalmap, normalmap);
                 materialBlock.SetVector(_Sector, new Vector4(sector.value.x, sector.value.y, 0, 0));
+                materialBlock.SetFloat(_HeightmapScale, WorldChunkConstants.TerrainHeightScale);
                 RenderHelpers.CopyMatrices(terrainDataGroup.transforms, index, 1, RenderHelpers.matricesArray);
                 Graphics.DrawMeshInstanced(gridMesh, 0, material, RenderHelpers.matricesArray, 1, materialBlock, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
             }
