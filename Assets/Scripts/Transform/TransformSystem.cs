@@ -11,6 +11,7 @@ namespace Unity.InfiniteWorld
     {
         struct TransformSectorFilter
         {
+            [WriteOnly]
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
             public ComponentDataArray<Sector> sectors;
@@ -25,6 +26,7 @@ namespace Unity.InfiniteWorld
 
         struct TransformSectorShiftFilter
         {
+            [WriteOnly]
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
             public ComponentDataArray<Sector> sectors;
@@ -39,6 +41,7 @@ namespace Unity.InfiniteWorld
 
         struct TransformSectorShiftRotationFilter
         {
+            [WriteOnly]
             public ComponentDataArray<Transform> transforms;
             [ReadOnly]
             public ComponentDataArray<Sector> sectors;

@@ -319,8 +319,8 @@ namespace Unity.InfiniteWorld
                     }
 
                     cmd.AddComponent(entity, new TerrainChunkIsHeightmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsNormalmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsSplatmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsNormalmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsSplatmapBakingComponent());
 
                     m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
                     {
