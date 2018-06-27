@@ -91,11 +91,12 @@ namespace Unity.InfiniteWorld
                 var y = i / WorldChunkConstants.ChunkSize;
                 var x = i % WorldChunkConstants.ChunkSize;
 
-                const float invScale = 1.0f/(WorldChunkConstants.ChunkSize - 1);
+                const float invScale = 1.0f / (float)(WorldChunkConstants.ChunkSize - 1);
                 var value = noisex.turb(
                     Sector.value,
                     new float2(x, y) * invScale,
-                    4, 0.8f, 1.0f, 0.5f
+                    WorldChunkConstants.TerrainOctaves,
+                    WorldChunkConstants.TerrainOctaveMultiplier, 1.0f, WorldChunkConstants.TerrainOctavePersistence
                 );
 
                 Heightmap[i] = value;
@@ -293,8 +294,8 @@ namespace Unity.InfiniteWorld
                     }
 
                     cmd.AddComponent(entity, new TerrainChunkIsHeightmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsNormalmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsSplatmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsNormalmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsSplatmapBakingComponent());
 
                     m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
                     {
