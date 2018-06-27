@@ -7,6 +7,77 @@ using UnityEngine;
 
 namespace Unity.InfiniteWorld
 {
+    public static class noisex
+    {
+        public static float fbm(
+            float2 sector,
+            float2 xy,
+            int octaves, 
+            float multiplier, 
+            float sectorScale, 
+            float persistence
+        )
+        {
+            float value = 0.0f;
+            for (int j = 0; j < octaves; ++j)
+            {
+                value += noise.snoise((xy + sector) * sectorScale) * multiplier;
+
+                sectorScale *= 2.0f;
+                multiplier *= persistence;
+            }
+
+            return value;
+        }
+
+        public static float turb(
+            float2 sector,
+            float2 xy,
+            int octaves,
+            float multiplier,
+            float sectorScale,
+            float persistence
+        )
+        {
+            float value = 0.0f;
+            for (int j = 0; j < octaves; ++j)
+            {
+                value += math.abs(noise.snoise((xy + sector) * sectorScale)) * multiplier;
+
+                sectorScale *= 2.0f;
+                multiplier *= persistence;
+            }
+
+            return value;
+        }
+
+        public static float ridge(
+            float2 sector,
+            float2 xy,
+            int octaves,
+            float multiplier,
+            float sectorScale,
+            float persistence,
+            float offset
+        )
+        {
+            float value = 0.0f;
+            for (int j = 0; j < octaves; ++j)
+            {
+                var n = math.abs(noise.snoise((xy + sector) * sectorScale)) * multiplier;
+                n = offset - n;
+                n *= n;
+
+                value += n;
+
+                sectorScale *= 2.0f;
+                multiplier *= persistence;
+            }
+
+            return value;
+        }
+    }
+
     [AlwaysUpdateSystem]
     public unsafe class TerrainGenerationSystem : JobComponentSystem
     {
@@ -20,23 +91,13 @@ namespace Unity.InfiniteWorld
                 var y = i / WorldChunkConstants.ChunkSize;
                 var x = i % WorldChunkConstants.ChunkSize;
 
-                float scale = (float)(WorldChunkConstants.ChunkSize - 1);
-                float multiplier = 0.8f;
-                float persistence = 0.5f;
-                int octaves = 4;
-                float2 sector = new float2(Sector.value);
-                float sectorScale = 1.0f;
-
-                float2 xy = new float2(x / scale, y / scale);
-
-                float value = 0.0f;
-                for (int j = 0; j < octaves; ++j)
-                {
-                    value += noise.snoise((xy + sector) * sectorScale) * multiplier;
-
-                    sectorScale *= 2.0f;
-                    multiplier *= persistence;
-                }
+                const float invScale = 1.0f / (float)(WorldChunkConstants.ChunkSize - 1);
+                var value = noisex.turb(
+                    Sector.value,
+                    new float2(x, y) * invScale,
+                    WorldChunkConstants.TerrainOctaves,
+                    WorldChunkConstants.TerrainOctaveMultiplier, 1.0f, WorldChunkConstants.TerrainOctavePersistence
+                );
 
                 Heightmap[i] = value;
             }
@@ -233,8 +294,8 @@ namespace Unity.InfiniteWorld
                     }
 
                     cmd.AddComponent(entity, new TerrainChunkIsHeightmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsNormalmapBakingComponent());
-                    cmd.AddComponent(m_TriggeredSectors.Entities[i], new TerrainChunkIsSplatmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsNormalmapBakingComponent());
+                    cmd.AddComponent(entity, new TerrainChunkIsSplatmapBakingComponent());
 
                     m_DataToUploadOnGPU.Add(new DataToUploadOnGPU
                     {

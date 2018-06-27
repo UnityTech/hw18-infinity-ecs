@@ -79,6 +79,24 @@ namespace Unity.InfiniteWorld
             mesh.uv = uvs;
             mesh.triangles = indices;
 
+            var bounds = mesh.bounds;
+            var extents = bounds.extents;
+
+            float multiplier = WorldChunkConstants.TerrainOctaveMultiplier;
+            float persistence = WorldChunkConstants.TerrainOctavePersistence;
+            int octaves = WorldChunkConstants.TerrainOctaves;
+
+            for (int j = 0; j < octaves; ++j)
+            {
+                extents.y += multiplier;
+                multiplier *= persistence;
+            }
+
+            extents.y *= WorldChunkConstants.TerrainHeightScale;
+
+            bounds.extents = extents;
+            mesh.bounds = bounds;
+
             return mesh;
         }
     }
