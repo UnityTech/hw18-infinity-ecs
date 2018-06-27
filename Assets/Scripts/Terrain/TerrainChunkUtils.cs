@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Unity.InfiniteWorld
 {
@@ -17,11 +18,16 @@ namespace Unity.InfiniteWorld
             int xEdges = xVerts - 1;
             int yEdges = yVerts - 1;
 
+            int indexCount = xEdges * yEdges * 6;
+
             int count = xVerts * yVerts;
             var positions = new Vector3[count];
             var normals = new Vector3[count];
             var uvs = new Vector2[count];
-            var indices = new int[xEdges * yEdges * 6];
+            var indices = new int[indexCount];
+
+            if (indexCount >= 65536)
+                mesh.indexFormat = IndexFormat.UInt32;
 
             float stepX = 1.0f / xEdges;
             float stepY = 1.0f / yEdges;
