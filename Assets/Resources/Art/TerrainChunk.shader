@@ -144,20 +144,18 @@ Shader "Custom/TerrainChunk"
 
 			float height = LOAD_TEXTURE2D_LOD(_Heightmap, _ChunkTextureSize * v.texcoord.xy, 0).r;
 			v.vertex.y += height * _HeightmapScale;
-			float3 normal = LOAD_TEXTURE2D_LOD(_Normalmap, _ChunkTextureSize * v.texcoord.xy, 0).xyz;
-			normal = normal * 2 - 1;
-			v.normal = normal;
-
+			
 			o.pos = UnityObjectToClipPos(v.vertex);
 			o.texcoord.xy = v.texcoord;
 			float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-			float3 worldNormal = UnityObjectToWorldNormal(v.normal);
+			float3 worldNormal = UnityObjectToWorldNormal(float3(0, 1, 0));
 			fixed3 worldTangent = UnityObjectToWorldDir(v.tangent.xyz);
 			fixed tangentSign = v.tangent.w * unity_WorldTransformParams.w;
 			fixed3 worldBinormal = cross(worldNormal, worldTangent) * tangentSign;
 			o.tSpace0 = float4(worldTangent.x, worldBinormal.x, worldNormal.x, worldPos.x);
 			o.tSpace1 = float4(worldTangent.y, worldBinormal.y, worldNormal.y, worldPos.y);
 			o.tSpace2 = float4(worldTangent.z, worldBinormal.z, worldNormal.z, worldPos.z);
+
 #ifdef DYNAMICLIGHTMAP_ON
 			o.lmap.zw = v.texcoord2.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
@@ -230,8 +228,20 @@ Shader "Custom/TerrainChunk"
 			float2 position = _Sector.xy + uv;
 
 			float height = LOAD_TEXTURE2D_LOD(_Heightmap, _ChunkTextureSize * IN.texcoord, 0).r;
-			float3 normalmap = LOAD_TEXTURE2D_LOD(_Normalmap, _ChunkTextureSize * IN.texcoord, 0);
+			float3 normalmap = float3(LOAD_TEXTURE2D_LOD(_Normalmap, _ChunkTextureSize * IN.texcoord, 0).xy, 1);
 			float3 normal = normalmap * 2 - 1;
+
+			/*
+			o.tSpace0 = float4(worldTangent.x, worldBinormal.x, worldNormal.x, worldPos.x);
+			o.tSpace1 = float4(worldTangent.y, worldBinormal.y, worldNormal.y, worldPos.y);
+			o.tSpace2 = float4(worldTangent.z, worldBinormal.z, worldNormal.z, worldPos.z);
+			*/
+			float3 worldTangent = float3(IN.tSpace0.x, IN.tSpace1.x, IN.tSpace2.x);
+			float3 worldBinormal = float3(IN.tSpace0.y, IN.tSpace1.y, IN.tSpace2.y);
+			float3 worldNormal = float3(IN.tSpace0.z, IN.tSpace1.z, IN.tSpace2.z);
+			float3x3 tangentToWorld = float3x3(worldTangent, worldBinormal, worldNormal);
+			normal = normalize(mul(normal, tangentToWorld));
+
 			float4 splat = LOAD_TEXTURE2D_LOD(_Splatmap, _ChunkTextureSize * IN.texcoord, 0);
 
 			if (length(splat) < 0.5)
@@ -266,9 +276,10 @@ Shader "Custom/TerrainChunk"
 				+ normalmap2.xy * splat.z
 				+ normalmap3.xy * splat.w
 				+ normalmap.xy,
-				normalmap.z
+				1
 				));
-			normal = normalmap * 2 - 1;
+			//normal = normalize(mul(normalmap * 2 - 1, tangentToWorld));
+			normal = normalize(normalmap * 2 - 1);
 
 			// Albedo comes from a texture tinted by color
 			o.Albedo = albedo.rgb;
@@ -283,7 +294,7 @@ Shader "Custom/TerrainChunk"
 			// End surface
 
 			// For debug
-			//return float4(normal * 0.5 + 0.5, 1);
+			return float4(normal * 0.5 + 0.5, 1);
 
 
 

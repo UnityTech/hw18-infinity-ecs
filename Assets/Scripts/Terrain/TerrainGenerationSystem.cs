@@ -81,6 +81,17 @@ namespace Unity.InfiniteWorld
     [AlwaysUpdateSystem]
     public unsafe class TerrainGenerationSystem : JobComponentSystem
     {
+        public static float DoNoise(int2 sector, float x, float y)
+        {
+            const float invScale = 1.0f / (float)(WorldChunkConstants.ChunkSize - 1);
+            return noisex.turb(
+                sector,
+                new float2(x, y) * invScale,
+                WorldChunkConstants.TerrainOctaves,
+                WorldChunkConstants.TerrainOctaveMultiplier, 1.0f, WorldChunkConstants.TerrainOctavePersistence
+            );
+        }
+
         struct GenerateHeightmapJob : IJobParallelFor
         {
             [ReadOnly] public Sector Sector;
@@ -91,45 +102,55 @@ namespace Unity.InfiniteWorld
                 var y = i / WorldChunkConstants.ChunkSize;
                 var x = i % WorldChunkConstants.ChunkSize;
 
-                const float invScale = 1.0f / (float)(WorldChunkConstants.ChunkSize - 1);
-                var value = noisex.turb(
-                    Sector.value,
-                    new float2(x, y) * invScale,
-                    WorldChunkConstants.TerrainOctaves,
-                    WorldChunkConstants.TerrainOctaveMultiplier, 1.0f, WorldChunkConstants.TerrainOctavePersistence
-                );
-
-                Heightmap[i] = value;
+                Heightmap[i] = DoNoise(Sector.value, x, y);
             }
         }
 
         struct GenerateNormalmapJob : IJobParallelFor
         {
+            [ReadOnly] public Sector Sector;
             [ReadOnly] public NativeArray<float> Heightmap;
-            [WriteOnly] public NativeArray<float4> Normalmap;
+            [WriteOnly] public NativeArray<float2> Normalmap;
 
             public void Execute(int i)
             {
+                const float invScale = 1.0f / (float)(WorldChunkConstants.ChunkSize - 1);
 
-                    // Calcul normal map
-                    var x = i / WorldChunkConstants.ChunkSize;
-                    var y = i % WorldChunkConstants.ChunkSize;
+                // Calcul normal map
+                var y = i / WorldChunkConstants.ChunkSize;
+                var x = i % WorldChunkConstants.ChunkSize;
 
-                    var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                float left, right, top, bottom;
+                int l = x - 1;
+                int r = x + 1;
+                int t = y + 1;
+                int b = y - 1;
 
-                    var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
-                    var xRight = x1 + y * WorldChunkConstants.ChunkSize;
-                    var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
-                    var yDown = x + y1 * WorldChunkConstants.ChunkSize;
-                    var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
-                    var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
-
-                    var luma = new float4(dx, dy, 1, 1);
-                    Normalmap[i] = luma;
+                if (l >= 0)
+                    left = Heightmap[l + y * WorldChunkConstants.ChunkSize];
+                else
+                    left = DoNoise(Sector.value - new int2(1, 0), WorldChunkConstants.ChunkSize - 1.0f, y);
                 
+                if (r < WorldChunkConstants.ChunkSize)
+                    right = Heightmap[r + y * WorldChunkConstants.ChunkSize];
+                else
+                    right = DoNoise(Sector.value + new int2(1, 0), 0.0f, y);
+                
+                if (t < WorldChunkConstants.ChunkSize)
+                    top = Heightmap[x + t * WorldChunkConstants.ChunkSize];
+                else
+                    top = DoNoise(Sector.value + new int2(0, 1), x, 0.0f);
+                
+                if (b >= 0)
+                    bottom = Heightmap[x + b * WorldChunkConstants.ChunkSize];
+                else
+                    bottom = DoNoise(Sector.value - new int2(0, 1), x, WorldChunkConstants.ChunkSize - 1.0f);
+
+                var dx = ((right - left) + 1) * 0.5f;
+                var dy = ((top - bottom) + 1) * 0.5f;
+
+                var luma = new float2(dx, dy);
+                Normalmap[i] = luma;
             }
         }
 
@@ -271,7 +292,8 @@ namespace Unity.InfiniteWorld
                         var job2 = new GenerateNormalmapJob
                         {
                             Heightmap = heightmap,
-                            Normalmap = normalmap
+                            Normalmap = normalmap,
+                            Sector = sector
                         };
 
                         thisChunkJob = job2.Schedule(

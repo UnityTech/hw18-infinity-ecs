@@ -15,7 +15,7 @@ namespace Unity.InfiniteWorld
             public NativeArray<float> Heightmap;
             public Texture2D HeightmapTex;
 
-            public NativeArray<float4> Normalmap;
+            public NativeArray<float2> Normalmap;
             public Texture2D NormalmapTex;
 
             public NativeArray<float4> Splatmap;
@@ -38,7 +38,7 @@ namespace Unity.InfiniteWorld
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
         }
         //NormalMap
-        public NativeArray<float4> GetChunkNormalmap(Sector sector)
+        public NativeArray<float2> GetChunkNormalmap(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).Normalmap;
         }
@@ -102,14 +102,14 @@ namespace Unity.InfiniteWorld
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     ),
 
-                    Normalmap = new NativeArray<float4>(
+                    Normalmap = new NativeArray<float2>(
                         WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
                         Allocator.Persistent
                     ),
                     NormalmapTex = new Texture2D(
                         WorldChunkConstants.ChunkSize,
                         WorldChunkConstants.ChunkSize,
-                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     ),
 
