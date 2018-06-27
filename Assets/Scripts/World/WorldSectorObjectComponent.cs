@@ -2,7 +2,7 @@
 
 namespace Unity.InfiniteWorld
 {
-    struct WorldSectorReady : IComponentData
+    struct WorldSectorObject : IComponentData
     {
     }
 }

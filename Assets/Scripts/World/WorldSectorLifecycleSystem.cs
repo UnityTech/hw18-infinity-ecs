@@ -9,32 +9,18 @@ namespace Unity.InfiniteWorld
     [AlwaysUpdateSystem]
     public class WorldSectorLifecycleSystem : ComponentSystem
     {
-        struct CreateFilter
+        struct ObjectsFilter
         {
             [ReadOnly]
             public EntityArray entities;
             [ReadOnly]
             public ComponentDataArray<Sector> sectors;
             [ReadOnly]
-            public ComponentDataArray<WorldSector> worldSectors;
-        }
-
-        struct KillFilter
-        {
-            [ReadOnly]
-            public EntityArray entities;
-            [ReadOnly]
-            public ComponentDataArray<Sector> sectors;
-            [ReadOnly]
-            public ComponentDataArray<WorldSector> worldSectors;
-            [ReadOnly]
-            public ComponentDataArray<WorldSectorReady> readySectors;
+            public ComponentDataArray<WorldSectorObject> worldSectors;
         }
 
         [Inject]
-        CreateFilter createFilter;
-        [Inject]
-        KillFilter killFilter;
+        ObjectsFilter objectsFilter;
 
         [Inject]
         WorldCamera camera;
@@ -43,29 +29,36 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            archetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Transform), typeof(WorldSector));
+            archetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Transform), typeof(WorldSectorObject));
         }
 
         protected override void OnUpdate()
         {
-            // Remove anything be
+            // Remove anything outside ObjectsUnloadDistance radius
             camera.AddRemoveGrid(
                 WorldChunkConstants.ObjectsUnloadDistance, 
-                ref killFilter.sectors, 
+                ref objectsFilter.sectors, 
                 (int2 sector) => { }, 
                 (int index, int2 sector) => 
                     {
-                        PostUpdateCommands.DestroyEntity(createFilter.entities[index]);
+                        Debug.Log("KILL: " + sector.x + ":" + sector.y);
+                        PostUpdateCommands.DestroyEntity(objectsFilter.entities[index]);
                     }
             );
 
+            // Add any missing sector inside ObjectsVisibleDistance radius
             camera.AddRemoveGrid(
                 WorldChunkConstants.ObjectsVisibleDistance,
-                ref createFilter.sectors,
+                ref objectsFilter.sectors,
                 (int2 sector) =>
                     {
-                        var entity = EntityManager.CreateEntity(archetype);
-                        EntityManager.SetComponentData(entity, new Sector(sector));
+                        Debug.Log("CREATE: " + sector.x + ":" + sector.y);
+
+                        PostUpdateCommands.CreateEntity(archetype);
+                        PostUpdateCommands.SetComponent(new Sector(sector));
+
+                        PostUpdateCommands.CreateEntity();
+                        PostUpdateCommands.AddComponent(new WorldSectorVegetationCreateEvent() { sector = sector });
                     },
                 (int index, int2 sector) => { }
             );
