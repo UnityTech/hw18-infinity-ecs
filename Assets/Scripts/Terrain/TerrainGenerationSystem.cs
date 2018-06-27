@@ -30,17 +30,14 @@ namespace Unity.InfiniteWorld
             }
         }
 
-        struct GenerateNormalmapJob : IJobParallelForBatch
+        struct GenerateNormalmapJob : IJobParallelFor
         {
-            [ReadOnly] public Sector Sector;
+            [ReadOnly] public NativeArray<float> Heightmap;
             [WriteOnly] public NativeArray<float4> Normalmap;
 
-            public void Execute(int startIndex, int count)
+            public void Execute(int i)
             {
 
-                // Calcul normal map
-                for (int i = startIndex, c = startIndex + count; i < c; ++i)
-                {
                     // Calcul normal map
                     var x = i / WorldChunkConstants.ChunkSize;
                     var y = i % WorldChunkConstants.ChunkSize;
@@ -59,9 +56,11 @@ namespace Unity.InfiniteWorld
 
                     var luma = new float4(dx, dy, 1, 1);
                     Normalmap[i] = luma;
-                }
+                
             }
         }
+
+
 
         struct TriggeredSectors
         {
@@ -146,13 +145,13 @@ namespace Unity.InfiniteWorld
 
                         var job2 = new GenerateNormalmapJob
                         {
-                            Sector = sector,
+                            Heightmap = heightmap,
                             Normalmap = normalmap
                         };
 
-                        thisChunkJob = job2.ScheduleBatch(
+                        thisChunkJob = job2.Schedule(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            1,
+                            64,
                             thisChunkJob
                         );
                     }
