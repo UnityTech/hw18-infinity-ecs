@@ -135,8 +135,10 @@ namespace Unity.InfiniteWorld
         struct GenerateSplatmapJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<float> Heightmap;
-            // Splatmap data is stored internally as a 3d array of floats [terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers]
             [WriteOnly] public NativeArray<float4> Splatmap;
+            [WriteOnly] public float max;
+            [WriteOnly] public float height;
+            [WriteOnly] public float scope;
 
             public void Execute(int i)
             {
@@ -144,31 +146,48 @@ namespace Unity.InfiniteWorld
                 // Calcul splat map
                 var x = i / WorldChunkConstants.ChunkSize;
                 var y = i % WorldChunkConstants.ChunkSize;
+                //Normal map
+                var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
+                var xRight = x1 + y * WorldChunkConstants.ChunkSize;
+                var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
+                var yDown = x + y1 * WorldChunkConstants.ChunkSize;
+                var dxN = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
+                var dyN = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
 
                 // Normalise x/y coordinates to range 0-1 
-                var xN = math.clamp(x, 0, WorldChunkConstants.ChunkSize - 1);
-                var yN = math.clamp(y, 0, WorldChunkConstants.ChunkSize - 1);
+                //var xN = math.clamp(x, 0, WorldChunkConstants.ChunkSize - 1);
+                //var yN = math.clamp(y, 0, WorldChunkConstants.ChunkSize - 1);
 
-                //var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
-                //var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
+                //Find height
+                height = Heightmap[i];
+
+                //Find scope
+                float3 normalVector = new float3(dxN, dyN, 1f);
+                float3 yVector = new float3(0f, 1f, 0f);
+                float scope = math.dot(normalVector, yVector);
+               
 
                 //THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE
-                // Texture[0] has constant influence
-                var w = new float4(0.5f, 0.5f, 0.5f, 0.5f);
+                // Texture[0] GROUND (under 20%)
+                var w0 = 0.2f;// Mathf.Clamp01((terrainData.heightmapHeight - height));
 
-                //// Texture[1] is stronger at lower altitudes
-                //var w1 = 0.5f;// Mathf.Clamp01((terrainData.heightmapHeight - height));
+                //// Texture[1] GRASS (decreases with scope)
+                var w1 = scope;// Mathf.Clamp01((terrainData.heightmapHeight - height));
 
-                //// Texture[2] stronger on flatter terrain
-                //var w2 = 0.5f;// 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
+                //// Texture[2] ROCKS (increases with scope)
+                var w2 = 1.0f - scope;// 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
 
-                //// Texture[3] increases with height but only on surfaces facing positive Z axis 
-                //var w3 = 0.5f;// height * Mathf.Clamp01(normal.z);
+                //// Texture[3] SNOW (above 75%)
+                var w3 = (height > 0.5f) ? 1.5f : 0f;// height * Mathf.Clamp01(normal.z);
 
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
+                var w = new float4(w0, w1, w2, w3);
                 w = math.normalize(w);// [w1, w2, w3, w4]
                 Splatmap[i] = w;
-
             }
         }
 
