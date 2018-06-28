@@ -31,6 +31,10 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.unity.render-pipelines.high-definition": "file:../ScriptableRenderPipeline/com.unity.render-pipelines.high-definition",
+    "com.unity.postprocessing": "file:../ScriptableRenderPipeline/com.unity.postprocessing",
+    "com.unity.render-pipelines.core": "file:../ScriptableRenderPipeline/com.unity.render-pipelines.core",
+    "com.unity.shadergraph": "file:../ScriptableRenderPipeline/com.unity.shadergraph"
   }
 }
