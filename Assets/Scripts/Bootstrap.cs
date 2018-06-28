@@ -13,6 +13,8 @@ namespace Unity.InfiniteWorld
 
             var camera = entityManager.CreateEntity(cameraSystem.cameraArchetype);
             entityManager.AddComponent(camera, typeof(CameraMainTag));
+
+            World.Active.GetOrCreateManager<DebugOutput>().Init();
         }
     }
 }
