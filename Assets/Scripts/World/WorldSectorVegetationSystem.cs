@@ -31,7 +31,7 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Rotation), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
+            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Rotation), typeof(Scale), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
             var prefab = Resources.Load<GameObject>("Trees/Pines/Pine_005/Pine_005_01");
             var lod = prefab.transform.Find("pine_005_01_LOD0");
@@ -44,7 +44,7 @@ namespace Unity.InfiniteWorld
             for (int temp = 0; temp < eventsFilter.events.Length; ++temp)
             {
                 var sector = eventsFilter.events[temp].sector;
-                randomGen.seed = (uint)((sector.x + 1024) * 1048576 + sector.y);
+                randomGen.seed = (uint)((sector.x + 1023) * 1048575 + sector.y);
 
                 NativeArray<float> heightMap;
                 if (dataSystem.GetHeightmap(new Sector(sector), out heightMap))
@@ -66,15 +66,26 @@ namespace Unity.InfiniteWorld
 
             float3 shift = new float3(posX, heightMap[index] * WorldChunkConstants.TerrainHeightScale, posZ);
 
-            float rotation = randomGen.Uniform(Mathf.PI);
-            float sina, cosa;
-            math.sincos(0.5f * rotation, out sina, out cosa);
-            var q = new quaternion(0.0f, sina, 0.0f, cosa);
+            float rx = randomGen.Uniform(Mathf.PI * 0.1f);
+            float ry = randomGen.Uniform(Mathf.PI);
+            float rz = randomGen.Uniform(Mathf.PI * 0.1f);
+
+            float3 rotation = new float3(rx, ry, rz);
+
+            float3 s, c;
+            math.sincos(0.5f * rotation, out s, out c);
+            var q = new quaternion(new float4(s.xyz, c.x) * c.yxxy * c.zzyz + s.yxxy * s.zzyz * new float4(c.xyz, s.x) * new float4(-1.0f, 1.0f, -1.0f, 1.0f));
+
+            float sx = randomGen.Uniform(0.4f) + 0.8f;
+            float sy = randomGen.Uniform(0.4f) + 0.8f;
+            float sz = randomGen.Uniform(0.4f) + 0.8f;
+            float3 scale = new float3(sx, sy, sz);
 
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector));
             PostUpdateCommands.SetComponent(new Shift(shift));
             PostUpdateCommands.SetComponent(new Rotation(q));
+            PostUpdateCommands.SetComponent(new Scale(scale));
             var meshRender = new MeshRender()
             {
                 mesh = testMesh,

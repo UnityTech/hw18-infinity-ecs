@@ -28,6 +28,8 @@ namespace Unity.InfiniteWorld
             public SubtractiveComponent<Shift> shift;
             [ReadOnly]
             public SubtractiveComponent<Rotation> rotations;
+            [ReadOnly]
+            public SubtractiveComponent<Scale> scales;
         }
 
         [Inject]
@@ -43,6 +45,8 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Shift> shifts;
             [ReadOnly]
             public SubtractiveComponent<Rotation> rotations;
+            [ReadOnly]
+            public SubtractiveComponent<Scale> scales;
         }
 
         [Inject]
@@ -58,10 +62,29 @@ namespace Unity.InfiniteWorld
             public ComponentDataArray<Shift> shifts;
             [ReadOnly]
             public ComponentDataArray<Rotation> rotations;
+            [ReadOnly]
+            public SubtractiveComponent<Scale> scales;
         }
 
         [Inject]
         TransformSectorShiftRotationFilter transformSectorShiftRotationGroup;
+
+        struct TransformSectorShiftRotationScaleFilter
+        {
+            [WriteOnly]
+            public ComponentDataArray<Transform> transforms;
+            [ReadOnly]
+            public ComponentDataArray<Sector> sectors;
+            [ReadOnly]
+            public ComponentDataArray<Shift> shifts;
+            [ReadOnly]
+            public ComponentDataArray<Rotation> rotations;
+            [ReadOnly]
+            public ComponentDataArray<Scale> scales;
+        }
+
+        [Inject]
+        TransformSectorShiftRotationScaleFilter transformSectorShiftRotationScaleGroup;
 
         [Inject]
         CameraSystem camera;
@@ -146,6 +169,38 @@ namespace Unity.InfiniteWorld
             }
         }
 
+        [BurstCompile]
+        struct TransformSectorShiftRotationScaleJob : IJobParallelFor
+        {
+            [ReadOnly]
+            public int2 cameraSector;
+            [ReadOnly]
+            public ComponentDataArray<Sector> sectors;
+            [ReadOnly]
+            public ComponentDataArray<Shift> shifts;
+            [ReadOnly]
+            public ComponentDataArray<Rotation> rotations;
+            [ReadOnly]
+            public ComponentDataArray<Scale> scales;
+
+            public ComponentDataArray<Transform> transforms;
+
+            public void Execute(int index)
+            {
+                float3 shift = shifts[index].value;
+                float3 scale = scales[index].value;
+                int2 sector = sectors[index].value - cameraSector;
+                float4x4 matrix = math.rottrans(rotations[index].rotation, shift + new float3(sector.x * Sector.SECTOR_SIZE, 0, sector.y * Sector.SECTOR_SIZE));
+                float4x4 scaleM = new float4x4(
+                    scale.x,    0.0f, 0.0f, 0.0f,
+                    0.0f, scale.y,    0.0f, 0.0f,
+                    0.0f, 0.0f, scale.z,    0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f
+                );
+                transforms[index] = new Transform(math.mul(matrix, scaleM));
+            }
+        }
+
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
             var cameraSector = EntityManager.GetComponentData<Sector>(camera.main);
@@ -219,7 +274,28 @@ namespace Unity.InfiniteWorld
                 sectorShiftRotationJobHandle = transformJob.Schedule(transforms.Length, 4, sectorShiftJobHandle);
             }
 
-            return sectorShiftRotationJobHandle;
+            JobHandle sectorShiftRotationScaleJobHandle;
+            {
+                var transforms = transformSectorShiftRotationScaleGroup.transforms;
+                var sectors = transformSectorShiftRotationScaleGroup.sectors;
+                var shifts = transformSectorShiftRotationScaleGroup.shifts;
+                var rotations = transformSectorShiftRotationScaleGroup.rotations;
+                var scales = transformSectorShiftRotationScaleGroup.scales;
+
+                var transformJob = new TransformSectorShiftRotationScaleJob
+                {
+                    cameraSector = cameraSector.value,
+                    sectors = sectors,
+                    shifts = shifts,
+                    rotations = rotations,
+                    transforms = transforms,
+                    scales = scales
+                };
+
+                sectorShiftRotationScaleJobHandle = transformJob.Schedule(transforms.Length, 4, sectorShiftRotationJobHandle);
+            }
+
+            return sectorShiftRotationScaleJobHandle;
         }
     }
 }
