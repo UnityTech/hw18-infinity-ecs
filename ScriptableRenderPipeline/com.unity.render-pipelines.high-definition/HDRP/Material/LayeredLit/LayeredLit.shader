@@ -88,8 +88,6 @@ Shader "HDRenderPipeline/LayeredLit"
         _HeightMap2("HeightMap2", 2D) = "black" {}
         _HeightMap3("HeightMap3", 2D) = "black" {}
 
-        _HeightmapScale("Heightmap Scale", Float) = 50
-
         // Caution: Default value of _HeightAmplitude must be (_HeightMax - _HeightMin) * 0.01
         // Those two properties are computed from the ones exposed in the UI and depends on the displaement mode so they are separate because we don't want to lose information upon displacement mode change.
         [HideInInspector] _HeightAmplitude0("Height Scale0", Float) = 0.02

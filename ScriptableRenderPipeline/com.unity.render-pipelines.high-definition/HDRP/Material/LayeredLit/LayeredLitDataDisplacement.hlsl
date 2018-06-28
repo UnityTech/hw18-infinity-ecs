@@ -303,7 +303,7 @@ float ApplyPerPixelDisplacement(FragInputs input, float3 V, inout LayerTexCoord 
 float3 ComputePerVertexDisplacement(LayerTexCoord layerTexCoord, float4 vertexColor, float lod)
 {
 #if LAYERS_HEIGHTMAP_ENABLE
-    float baseHeight = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base0, lod).r - _HeightCenter0) * _HeightmapScale;
+    //float baseHeight = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base0, lod).r) * _HeightmapScale;
     float height0 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap0, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base0, lod).r - _HeightCenter0) * _HeightAmplitude0;
     float height1 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap1, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base1, lod).r - _HeightCenter1) * _HeightAmplitude1;
     float height2 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap2, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base2, lod).r - _HeightCenter2) * _HeightAmplitude2;
@@ -332,7 +332,7 @@ float3 ComputePerVertexDisplacement(LayerTexCoord layerTexCoord, float4 vertexCo
     // Add main layer influence if any (simply add main layer add on other layer)
     // We multiply by the input mask for the first layer (blendMask.a) because if the mask here is black it means that the layer
     // is not actually underneath any visible layer so we don't want to inherit its height.
-    float influenceMask = blendMasks.a;
+    float influenceMask = 1;// blendMasks.a;
     #ifdef _INFLUENCEMASK_MAP
     influenceMask *= GetInfluenceMask(layerTexCoord, true, lod);
     #endif
@@ -348,12 +348,12 @@ float3 ComputePerVertexDisplacement(LayerTexCoord layerTexCoord, float4 vertexCo
     float3 objectScale = GetDisplacementObjectScale(true);
     // Reminder: mappingType is know statically, so code below is optimize by the compiler
     // Planar and Triplanar are in world space thus it is independent of object scale
-    return baseHeight + heightResult.xxx * BlendLayeredVector3( ((layerTexCoord.base0.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
+    return heightResult.xxx * BlendLayeredVector3( ((layerTexCoord.base0.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base1.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base2.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base3.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)), weights);
     #else
-    return baseHeight + heightResult.xxx;
+    return heightResult.xxx;
     #endif
 #else
     return float3(0.0, 0.0, 0.0);
