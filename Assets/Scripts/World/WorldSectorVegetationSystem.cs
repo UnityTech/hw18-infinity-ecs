@@ -43,30 +43,26 @@ namespace Unity.InfiniteWorld
             for (int temp = 0; temp < eventsFilter.events.Length; ++temp)
             {
                 var sector = eventsFilter.events[temp].sector;
-                if (dataSystem.IsHeightmapReady(sector))
+
+                NativeArray<float> heightMap;
+                if (dataSystem.GetHeightmap(new Sector(sector), out heightMap))
                 {
                     // Just create 150 trees in random position inside a sector
                     for (int i = 0; i < 150; ++i)
-                    {
-                        CreateEntity(new Sector(sector));
-                    }
+                        CreateEntity(sector, heightMap);
 
                     PostUpdateCommands.DestroyEntity(eventsFilter.entities[temp]);
                 }
             }
         }
 
-        protected void CreateEntity(Sector sector)
+        protected void CreateEntity(int2 sector, NativeArray<float> heightMap)
         {
-            NativeArray<float> heightMap;
-            if (!dataSystem.GetHeightmap(sector, out heightMap))
-                return;
-
             var rand = new int2((int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize), (int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize));
             Vector3 shift = new Vector3(rand.x, heightMap[(rand.y * WorldChunkConstants.ChunkSize + rand.x)] * WorldChunkConstants.TerrainHeightScale, rand.y);
 
             PostUpdateCommands.CreateEntity(vegetationArchetype);
-            PostUpdateCommands.SetComponent(new Sector(sector.value));
+            PostUpdateCommands.SetComponent(new Sector(sector));
             PostUpdateCommands.SetComponent(new Shift(shift));
             PostUpdateCommands.SetSharedComponent(new MeshRender() { mesh = testMesh, material = testMaterial });
         }

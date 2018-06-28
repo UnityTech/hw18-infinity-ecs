@@ -104,20 +104,24 @@ namespace Unity.InfiniteWorld
             sectorData.Add(sector.value, asset);
         }
 
-        //NormalMap
         public void DisposeSector(Sector sector)
         {
             AssetData asset;
             if (!sectorData.TryGetValue(sector.value, out asset))
                 return;
 
+            DisposeData(asset);
+
+            sectorData.Remove(sector.value);
+        }
+        private void DisposeData(AssetData asset)
+        {
             asset.Heightmap.Dispose();
             UnityEngine.Object.Destroy(asset.HeightmapTex);
             if (asset.NormalmapTex)
                 UnityEngine.Object.Destroy(asset.NormalmapTex);
             if (asset.SplatmapTex)
                 UnityEngine.Object.Destroy(asset.SplatmapTex);
-            sectorData.Remove(sector.value);
         }
 
         protected override void OnCreateManager(int capacity)
@@ -127,9 +131,9 @@ namespace Unity.InfiniteWorld
 
         protected override void OnDestroyManager()
         {
-            var keys = sectorData.Keys;
-            foreach (var key in keys)
-                DisposeSector(new Sector(key));
+            foreach (var asset in sectorData)
+                DisposeData(asset.Value);
+
             sectorData.Clear();
             sectorData = null;
         }
