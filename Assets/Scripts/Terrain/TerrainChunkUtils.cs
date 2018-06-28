@@ -82,17 +82,7 @@ namespace Unity.InfiniteWorld
             var bounds = mesh.bounds;
             var extents = bounds.extents;
 
-            float multiplier = WorldChunkConstants.TerrainOctaveMultiplier;
-            float persistence = WorldChunkConstants.TerrainOctavePersistence;
-            int octaves = WorldChunkConstants.TerrainOctaves;
-
-            for (int j = 0; j < octaves; ++j)
-            {
-                extents.y += multiplier;
-                multiplier *= persistence;
-            }
-
-            extents.y *= WorldChunkConstants.TerrainHeightScale;
+            extents.y = 1024.0f;
 
             bounds.extents = extents;
             mesh.bounds = bounds;
