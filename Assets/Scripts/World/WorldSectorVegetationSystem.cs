@@ -40,9 +40,19 @@ namespace Unity.InfiniteWorld
             vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Rotation), typeof(Scale), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
             var prefabNames = new string[]{
+                "Trees/Pines/Pine_002_new/Pine_002_S2", // thick
+                "Trees/Pines/Pine_002_new/Pine_002_XL", // large
+                "Trees/Pines/Pine_002_new/Pine_002_XXL", // large
+                "Bushes/RedBush/RedBush_Var1",
+                "Assets/Resources/Trees/Tree_Dead_001/tree_dead_001",
                 "Trees/Pines/Pine_005/Pine_005_01"
             };
             var lodNames = new string[]{
+                "S2_LOD0",
+                "XL_LOD0",
+                "XXL_LOD0",
+                "RedBush_Var1_LOD0",
+                "tree_dead_LOD0",
                 "pine_005_01_LOD0"
             };
 
