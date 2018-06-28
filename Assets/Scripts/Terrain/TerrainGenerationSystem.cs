@@ -255,11 +255,21 @@ namespace Unity.InfiniteWorld
         class EntityBarrier : BarrierSystem
         { }
 
+        static readonly int _Sector = Shader.PropertyToID("_Sector");
+        static readonly int _HeightMap = Shader.PropertyToID("_HeightMap");
+
         [Inject] TriggeredSectors m_TriggeredSectors;
         [Inject] TerrainChunkAssetDataSystem m_TerrainChunkAssetDataSystem;
         [Inject] EntityBarrier m_EntityBarrier;
 
         List<DataToUploadOnGPU> m_DataToUploadOnGPU = new List<DataToUploadOnGPU>();
+
+        Material m_BaseColorMaterial;
+
+        protected override void OnCreateManager(int capacity)
+        {
+            m_BaseColorMaterial = Resources.Load<Material>("Art/BaseColorMaterial");
+        }
 
         protected override JobHandle OnUpdate(JobHandle dependsOn)
         {
@@ -281,7 +291,10 @@ namespace Unity.InfiniteWorld
                         WorldChunkConstants.ChunkSize,
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    );
+                    )
+                    {
+                        name = "HeightMap0 - " + data.Sector.value
+                    };
                     heightmapTex.wrapMode = TextureWrapMode.Clamp;
                     heightmapTex.LoadRawTextureData(data.Heightmap);
                     heightmapTex.Apply();
@@ -296,7 +309,10 @@ namespace Unity.InfiniteWorld
                         WorldChunkConstants.ChunkSize,
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    );
+                    )
+                    {
+                        name = "NormalMap - " + data.Sector.value
+                    };
                     normalmapTex.LoadRawTextureData(data.Normalmap);
                     normalmapTex.Apply();
                     m_TerrainChunkAssetDataSystem.SetNormalmapTex(data.Sector, normalmapTex);
@@ -310,10 +326,21 @@ namespace Unity.InfiniteWorld
                         WorldChunkConstants.ChunkSize,
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    );
+                    )
+                    {
+                        name = "LayerMask - " + data.Sector.value
+                    };
                     splatmapTex.LoadRawTextureData(data.Splatmap);
                     splatmapTex.Apply();
                     m_TerrainChunkAssetDataSystem.SetSplatmapTex(data.Sector, splatmapTex);
+
+                    //BaseColor
+                    var baseColorTex = m_TerrainChunkAssetDataSystem.GetBaseColorTex(data.Sector);
+                    baseColorTex.material = Object.Instantiate(m_BaseColorMaterial);
+                    baseColorTex.material.SetVector(_Sector, new Vector4(data.Sector.value.x, data.Sector.value.y, 0, 0));
+                    baseColorTex.material.SetTexture(_HeightMap, heightmapTex);
+                    baseColorTex.material.name = "BaseColor - " + data.Sector.value;
+                    baseColorTex.Update();
 
                     cmd.RemoveComponent<TerrainChunkIsSplatmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasSplatmap());

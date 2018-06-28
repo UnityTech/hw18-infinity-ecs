@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace Unity.InfiniteWorld
 {
@@ -17,6 +18,7 @@ namespace Unity.InfiniteWorld
             public Texture2D HeightmapTex;
             public Texture2D NormalmapTex;
             public Texture2D SplatmapTex;
+            public CustomRenderTexture BaseColor;
         }
 
         Dictionary<int2, AssetData> sectorData;
@@ -73,6 +75,15 @@ namespace Unity.InfiniteWorld
             sectorData[sector.value] = asset;
         }
 
+        public CustomRenderTexture GetBaseColorTex(Sector sector)
+        {
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+                return null;
+
+            return asset.BaseColor;
+        }
+
         public Texture2D GetSplatmapTex(Sector sector)
         {
             AssetData asset;
@@ -96,11 +107,19 @@ namespace Unity.InfiniteWorld
 
         public void AddSector(Sector sector, NativeArray<float> heightmap, Texture2D heightmapTex)
         {
-            AssetData asset;
+            AssetData asset = new AssetData();
             asset.Heightmap = heightmap;
             asset.HeightmapTex = heightmapTex;
             asset.NormalmapTex = null;
             asset.SplatmapTex = null;
+            asset.BaseColor = new CustomRenderTexture(
+                WorldChunkConstants.ChunkSize,
+                WorldChunkConstants.ChunkSize,
+                GraphicsFormat.R8G8B8A8_SRGB
+            )
+            {
+                updateMode = CustomRenderTextureUpdateMode.OnDemand
+            };
             sectorData.Add(sector.value, asset);
         }
 
@@ -114,7 +133,8 @@ namespace Unity.InfiniteWorld
 
             sectorData.Remove(sector.value);
         }
-        private void DisposeData(AssetData asset)
+
+        void DisposeData(AssetData asset)
         {
             asset.Heightmap.Dispose();
             UnityEngine.Object.Destroy(asset.HeightmapTex);
@@ -122,6 +142,13 @@ namespace Unity.InfiniteWorld
                 UnityEngine.Object.Destroy(asset.NormalmapTex);
             if (asset.SplatmapTex)
                 UnityEngine.Object.Destroy(asset.SplatmapTex);
+            if (asset.BaseColor)
+            {
+                asset.BaseColor.Release();
+                UnityEngine.Object.Destroy(asset.BaseColor);
+                if (asset.BaseColor.material)
+                    UnityEngine.Object.Destroy(asset.BaseColor.material);
+            }
         }
 
         protected override void OnCreateManager(int capacity)

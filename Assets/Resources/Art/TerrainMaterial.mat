@@ -10,9 +10,10 @@ Material:
   m_Shader: {fileID: 4800000, guid: 81d02e8644315b742b154842a3a2f98c, type: 3}
   m_ShaderKeywords: _BENTNORMALMAP1 _BENTNORMALMAP2 _BENTNORMALMAP3 _DISPLACEMENT_LOCK_TILING_SCALE
     _HEIGHTMAP0 _HEIGHTMAP1 _HEIGHTMAP2 _HEIGHTMAP3 _HEIGHT_BASED_BLEND _LAYEREDLIT_4_LAYERS
-    _MAIN_LAYER_INFLUENCE_MODE _MASKMAP0 _MASKMAP1 _MASKMAP2 _MASKMAP3 _NORMALMAP0
-    _NORMALMAP1 _NORMALMAP2 _NORMALMAP3 _NORMALMAP_TANGENT_SPACE0 _NORMALMAP_TANGENT_SPACE1
-    _NORMALMAP_TANGENT_SPACE2 _NORMALMAP_TANGENT_SPACE3 _VERTEX_DISPLACEMENT _VERTEX_DISPLACEMENT_LOCK_OBJECT_SCALE
+    _LAYER_MAPPING_TRIPLANAR_BLENDMASK _MAIN_LAYER_INFLUENCE_MODE _MASKMAP0 _MASKMAP1
+    _MASKMAP2 _MASKMAP3 _NORMALMAP0 _NORMALMAP1 _NORMALMAP2 _NORMALMAP3 _NORMALMAP_TANGENT_SPACE0
+    _NORMALMAP_TANGENT_SPACE1 _NORMALMAP_TANGENT_SPACE2 _NORMALMAP_TANGENT_SPACE3
+    _VERTEX_DISPLACEMENT _VERTEX_DISPLACEMENT_LOCK_OBJECT_SCALE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
@@ -24,12 +25,12 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseColorMap0:
-        m_Texture: {fileID: 2800000, guid: 3bfc82ddb8272404aa836168b0ee9f26, type: 3}
+        m_Texture: {fileID: 8600000, guid: b565298a37b90d44d895b1b5e541613e, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap1:
         m_Texture: {fileID: 2800000, guid: 3bfc82ddb8272404aa836168b0ee9f26, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 48, y: 48}
         m_Offset: {x: 0, y: 0}
     - _BaseColorMap2:
         m_Texture: {fileID: 2800000, guid: 27020d0084e70c64bb030fe883b1abd5, type: 3}
@@ -136,7 +137,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HeightMap0:
-        m_Texture: {fileID: 2800000, guid: d379da3a9de8c3d439d0b2411045d0dd, type: 3}
+        m_Texture: {fileID: 8600000, guid: 995c609c0a008114aae2e084f7e3bae5, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HeightMap1:
@@ -400,11 +401,11 @@ Material:
     - _HeightTessCenter1: 0.5
     - _HeightTessCenter2: 0.5
     - _HeightTessCenter3: 0.5
-    - _HeightTransition: 0.003
+    - _HeightTransition: 0.108
     - _HeightmapScale: 50
-    - _InheritBaseColor1: 0
-    - _InheritBaseColor2: 0
-    - _InheritBaseColor3: 0
+    - _InheritBaseColor1: 1
+    - _InheritBaseColor2: 1
+    - _InheritBaseColor3: 0.912
     - _InheritBaseHeight1: 1
     - _InheritBaseHeight2: 1
     - _InheritBaseHeight3: 1
@@ -413,7 +414,7 @@ Material:
     - _InheritBaseNormal3: 0
     - _InitialBend: 1
     - _InvTilingScale0: 1
-    - _InvTilingScale1: 1
+    - _InvTilingScale1: 0.020833334
     - _InvTilingScale2: 1
     - _InvTilingScale3: 1
     - _LayerCount: 4
@@ -500,7 +501,7 @@ Material:
     - _UVBase1: 0
     - _UVBase2: 0
     - _UVBase3: 0
-    - _UVBlendMask: 0
+    - _UVBlendMask: 5
     - _UVDetail0: 0
     - _UVDetail1: 0
     - _UVDetail2: 0
@@ -537,5 +538,5 @@ Material:
     - _UVMappingMask1: {r: 1, g: 0, b: 0, a: 0}
     - _UVMappingMask2: {r: 1, g: 0, b: 0, a: 0}
     - _UVMappingMask3: {r: 1, g: 0, b: 0, a: 0}
-    - _UVMappingMaskBlendMask: {r: 1, g: 0, b: 0, a: 0}
+    - _UVMappingMaskBlendMask: {r: 0, g: 0, b: 0, a: 0}
     - _UVMappingMaskEmissive: {r: 1, g: 0, b: 0, a: 0}
