@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Unity.InfiniteWorld
 {
@@ -256,8 +257,12 @@ namespace Unity.InfiniteWorld
             for (int i = m_DataToUploadOnGPU.Count - 1; i >= 0; --i)
             {
                 var data = m_DataToUploadOnGPU[i];
-                if (data.Handle.IsCompleted)
+                if (!data.Handle.IsCompleted)
+                    continue;
+
+                if (EntityManager.Exists(data.Entity))
                 {
+                    Profiler.BeginSample("Update Sector");
                     data.Handle.Complete();
                     //HeightMap
                     var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(data.Sector);
@@ -266,6 +271,7 @@ namespace Unity.InfiniteWorld
                     heightmapTex.Apply();
                     cmd.RemoveComponent<TerrainChunkIsHeightmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasHeightmap());
+
                     //NormalMap
                     var normalmap = m_TerrainChunkAssetDataSystem.GetChunkNormalmap(data.Sector);
                     var normalmapTex = m_TerrainChunkAssetDataSystem.GetChunkNormalmapTex(data.Sector);
@@ -273,6 +279,7 @@ namespace Unity.InfiniteWorld
                     normalmapTex.Apply();
                     cmd.RemoveComponent<TerrainChunkIsNormalmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasNormalmap());
+
                     //SplatMap
                     var splatmap = m_TerrainChunkAssetDataSystem.GetChunkSplatmap(data.Sector);
                     var splatmapTex = m_TerrainChunkAssetDataSystem.GetChunkSplatmapTex(data.Sector);
@@ -280,9 +287,9 @@ namespace Unity.InfiniteWorld
                     splatmapTex.Apply();
                     cmd.RemoveComponent<TerrainChunkIsSplatmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasSplatmap());
-
-                    m_DataToUploadOnGPU.RemoveAt(i);
                 }
+
+                m_DataToUploadOnGPU.RemoveAt(i);
             }
 
             // Update sectors
@@ -308,8 +315,7 @@ namespace Unity.InfiniteWorld
 
                         thisChunkJob = job.Schedule(
                             WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                            64,
-                            dependsOn
+                            64
                         );
                         //NormalMap
                         var job2 = new GenerateNormalmapJob
@@ -350,7 +356,7 @@ namespace Unity.InfiniteWorld
 
                     jobHandles[i] = thisChunkJob;
                 }
-                dependsOn = JobHandle.CombineDependencies(jobHandles);
+                //dependsOn = JobHandle.CombineDependencies(jobHandles);
                 jobHandles.Dispose();
             }
 
