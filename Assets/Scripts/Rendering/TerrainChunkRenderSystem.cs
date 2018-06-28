@@ -15,7 +15,7 @@ namespace Unity.InfiniteWorld
     {
         public static readonly int _HeightMap = Shader.PropertyToID("_HeightMap");
         public static readonly int _Normalmap = Shader.PropertyToID("_Normalmap");
-        public static readonly int _Splatmap = Shader.PropertyToID("_Splatmap");
+        public static readonly int _LayerMaskMap = Shader.PropertyToID("_LayerMaskMap");
         public static readonly int _Sector = Shader.PropertyToID("_Sector");
         public static readonly int _HeightmapScale = Shader.PropertyToID("_HeightmapScale");
 
@@ -61,7 +61,7 @@ namespace Unity.InfiniteWorld
                 var splatmap = chunkAssets.GetChunkSplatmapTex(sector);
                 materialBlock.SetTexture(_HeightMap, heightmap);
                 materialBlock.SetTexture(_Normalmap, normalmap);
-                materialBlock.SetTexture(_Splatmap, splatmap);
+                materialBlock.SetTexture(_LayerMaskMap, splatmap);
                 materialBlock.SetVector(_Sector, new Vector4(sector.value.x, sector.value.y, 0, 0));
                 materialBlock.SetFloat(_HeightmapScale, WorldChunkConstants.TerrainHeightScale);
                 RenderHelpers.CopyMatrices(terrainDataGroup.transforms, index, 1, RenderHelpers.matricesArray);
