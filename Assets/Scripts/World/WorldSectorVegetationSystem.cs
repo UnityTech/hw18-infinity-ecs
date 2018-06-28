@@ -31,9 +31,11 @@ namespace Unity.InfiniteWorld
         {
             public Mesh mesh;
             public Material[] materials;
+            public float probability;
         }
 
         VegetationModel[] models;
+        float totalProbability;
 
         protected override void OnCreateManager(int capacity)
         {
@@ -45,7 +47,11 @@ namespace Unity.InfiniteWorld
             var lodNames = new string[]{
                 "pine_005_01_LOD0"
             };
+            var probabilities = new float[]{
+                10.0f
+            };
 
+            totalProbability = 0.0f;
             models = new VegetationModel[lodNames.Length];
             for (int i = 0; i < lodNames.Length; ++i)
             {
@@ -54,8 +60,10 @@ namespace Unity.InfiniteWorld
                 models[i] = new VegetationModel()
                 {
                     mesh = lod.GetComponent<MeshFilter>().sharedMesh,
-                    materials = lod.GetComponent<MeshRenderer>().sharedMaterials
+                    materials = lod.GetComponent<MeshRenderer>().sharedMaterials,
+                    probability = probabilities[i]
                 };
+                totalProbability += probabilities[i];
             }
         }
 
@@ -101,7 +109,14 @@ namespace Unity.InfiniteWorld
             float sz = randomGen.Uniform(0.4f) + 0.8f;
             float3 scale = new float3(sx, sy, sz);
 
-            uint modelIndex = randomGen.Uniform(0, (uint)models.Length - 1);
+            float probability = randomGen.Uniform(totalProbability);
+            int modelIndex = 0;
+            for (int i = 0; i < models.Length; ++i, ++modelIndex)
+            {
+                probability -= models[i].probability;
+                if (probability <= 0.0f)
+                    break;
+            }
 
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector));
