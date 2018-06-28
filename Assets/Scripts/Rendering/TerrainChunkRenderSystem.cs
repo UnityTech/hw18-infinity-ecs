@@ -56,9 +56,9 @@ namespace Unity.InfiniteWorld
             for(int index = 0; index < terrainDataGroup.sectors.Length; index++)
             {
                 var sector = terrainDataGroup.sectors[index];
-                var heightmap = chunkAssets.GetChunkHeightmapTex(sector);
-                var normalmap = chunkAssets.GetChunkNormalmapTex(sector);
-                var splatmap = chunkAssets.GetChunkSplatmapTex(sector);
+                var heightmap = chunkAssets.GetHeightmapTex(sector);
+                var normalmap = chunkAssets.GetNormalmapTex(sector);
+                var splatmap = chunkAssets.GetSplatmapTex(sector);
                 materialBlock.SetTexture(_Heightmap, heightmap);
                 materialBlock.SetTexture(_Normalmap, normalmap);
                 materialBlock.SetTexture(_Splatmap, splatmap);

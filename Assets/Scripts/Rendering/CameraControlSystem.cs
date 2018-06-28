@@ -1,4 +1,5 @@
-﻿using Unity.Entities;
+﻿using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -58,11 +59,10 @@ namespace Unity.InfiniteWorld
                 math.clamp((int)cameraShift.value.z, 0, WorldChunkConstants.ChunkSize - 1));
 
             var cameraSector = EntityManager.GetComponentData<Sector>(camera.main);
-            if (heightmapSystem.IsHeightmapReady(cameraSector))
-            {
-                var heightmap = heightmapSystem.GetChunkHeightmap(cameraSector);
+
+            NativeArray<float> heightmap;
+            if (heightmapSystem.GetHeightmap(cameraSector, out heightmap))
                 cameraShift.value.y = heightmap[cameraShiftInt.y * WorldChunkConstants.ChunkSize + cameraShiftInt.x] * WorldChunkConstants.TerrainHeightScale + 3.0f;
-            }
 
             EntityManager.SetComponentData<Shift>(camera.main, cameraShift);
         }

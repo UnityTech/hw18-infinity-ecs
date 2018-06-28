@@ -58,7 +58,9 @@ namespace Unity.InfiniteWorld
 
         protected void CreateEntity(Sector sector)
         {
-            var heightMap = dataSystem.GetChunkHeightmap(sector);
+            NativeArray<float> heightMap;
+            if (!dataSystem.GetHeightmap(sector, out heightMap))
+                return;
 
             var rand = new int2((int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize), (int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize));
             Vector3 shift = new Vector3(rand.x, heightMap[(rand.y * WorldChunkConstants.ChunkSize + rand.x)] * WorldChunkConstants.TerrainHeightScale, rand.y);

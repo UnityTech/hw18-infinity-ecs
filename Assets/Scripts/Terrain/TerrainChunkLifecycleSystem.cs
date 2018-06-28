@@ -63,7 +63,7 @@ namespace Unity.InfiniteWorld
                     grid[dist.y * GRID_WIDTH + dist.x] = 1;
                 else
                 {
-                    chunkAssetData.DisposeChunkData(sectors[i]);
+                    chunkAssetData.DisposeSector(sectors[i]);
                     PostUpdateCommands.DestroyEntity(entities[i]);
                 }
             }

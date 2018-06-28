@@ -132,37 +132,38 @@ namespace Unity.InfiniteWorld
         struct GenerateNormalmapJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<float> Heightmap;
-            [WriteOnly] public NativeArray<float4> Normalmap;
+            [WriteOnly] public NativeArray<byte4> Normalmap;
 
             public void Execute(int i)
             {
 
-                    // Calcul normal map
-                    var x = i / WorldChunkConstants.ChunkSize;
-                    var y = i % WorldChunkConstants.ChunkSize;
+                // Calcul normal map
+                var x = i / WorldChunkConstants.ChunkSize;
+                var y = i % WorldChunkConstants.ChunkSize;
 
-                    var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
-                    var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var x_1 = math.clamp(x - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var y_1 = math.clamp(y - 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var x1 = math.clamp(x + 1, 0, WorldChunkConstants.ChunkSize - 1);
+                var y1 = math.clamp(y + 1, 0, WorldChunkConstants.ChunkSize - 1);
 
-                    var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
-                    var xRight = x1 + y * WorldChunkConstants.ChunkSize;
-                    var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
-                    var yDown = x + y1 * WorldChunkConstants.ChunkSize;
-                    var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
-                    var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
+                var xLeft = x_1 + y * WorldChunkConstants.ChunkSize;
+                var xRight = x1 + y * WorldChunkConstants.ChunkSize;
+                var yUp = x + y_1 * WorldChunkConstants.ChunkSize;
+                var yDown = x + y1 * WorldChunkConstants.ChunkSize;
+                var dx = ((Heightmap[xLeft] - Heightmap[xRight]) + 1) * 0.5f;
+                var dy = ((Heightmap[yUp] - Heightmap[yDown]) + 1) * 0.5f;
 
-                    var luma = new float4(dx, dy, 1, 1);
-                    Normalmap[i] = luma;
-                
+                var luma = new float4(dx, dy, 1, 1);
+
+                // [Anton] Got rid of float4 textures
+                Normalmap[i] = new byte4((byte)(luma.x * 0xFF), (byte)(luma.y * 0xFF), (byte)(luma.z * 0xFF), (byte)(luma.w * 0xFF));                
             }
         }
 
         struct GenerateSplatmapJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<float> Heightmap;
-            [WriteOnly] public NativeArray<float4> Splatmap;
+            [WriteOnly] public NativeArray<byte4> Splatmap;
             [WriteOnly] public float max;
             [WriteOnly] public float height;
             [WriteOnly] public float scope;
@@ -214,7 +215,9 @@ namespace Unity.InfiniteWorld
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 var w = new float4(w0, w1, w2, w3);
                 w = math.normalize(w);// [w1, w2, w3, w4]
-                Splatmap[i] = w;
+
+                // [Anton] Got rid of float4 textures
+                Splatmap[i] = new byte4((byte)(w.x * 0xFF), (byte)(w.y * 0xFF), (byte)(w.z * 0xFF), (byte)(w.w * 0xFF));
             }
         }
 
@@ -239,6 +242,9 @@ namespace Unity.InfiniteWorld
             public JobHandle Handle;
             public Sector Sector;
             public Entity Entity;
+            public NativeArray<float> Heightmap;
+            public NativeArray<byte4> Normalmap;
+            public NativeArray<byte4> Splatmap;
         }
 
         class EntityBarrier : BarrierSystem
@@ -260,35 +266,63 @@ namespace Unity.InfiniteWorld
                 if (!data.Handle.IsCompleted)
                     continue;
 
+                data.Handle.Complete();
+
                 if (EntityManager.Exists(data.Entity))
                 {
-                    Profiler.BeginSample("Update Sector");
-                    data.Handle.Complete();
                     //HeightMap
-                    m_TerrainChunkAssetDataSystem.SetHeightmapReady(data.Sector);
-
-                    var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(data.Sector);
-                    var heightmapTex = m_TerrainChunkAssetDataSystem.GetChunkHeightmapTex(data.Sector);
-                    heightmapTex.LoadRawTextureData(heightmap);
+                    var heightmapTex = new Texture2D(
+                        WorldChunkConstants.ChunkSize,
+                        WorldChunkConstants.ChunkSize,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32_SFloat,
+                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
+                    );
+                    heightmapTex.wrapMode = TextureWrapMode.Clamp;
+                    heightmapTex.LoadRawTextureData(data.Heightmap);
                     heightmapTex.Apply();
+                    m_TerrainChunkAssetDataSystem.AddSector(data.Sector, data.Heightmap, heightmapTex);
+
                     cmd.RemoveComponent<TerrainChunkIsHeightmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasHeightmap());
 
                     //NormalMap
-                    var normalmap = m_TerrainChunkAssetDataSystem.GetChunkNormalmap(data.Sector);
-                    var normalmapTex = m_TerrainChunkAssetDataSystem.GetChunkNormalmapTex(data.Sector);
-                    normalmapTex.LoadRawTextureData(normalmap);
+                    var normalmapTex = new Texture2D(
+                        WorldChunkConstants.ChunkSize,
+                        WorldChunkConstants.ChunkSize,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm,
+                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
+                    );
+                    normalmapTex.LoadRawTextureData(data.Normalmap);
                     normalmapTex.Apply();
+                    m_TerrainChunkAssetDataSystem.SetNormalmapTex(data.Sector, normalmapTex);
+
                     cmd.RemoveComponent<TerrainChunkIsNormalmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasNormalmap());
 
                     //SplatMap
-                    var splatmap = m_TerrainChunkAssetDataSystem.GetChunkSplatmap(data.Sector);
-                    var splatmapTex = m_TerrainChunkAssetDataSystem.GetChunkSplatmapTex(data.Sector);
-                    splatmapTex.LoadRawTextureData(splatmap);
+                    var splatmapTex = new Texture2D(
+                        WorldChunkConstants.ChunkSize,
+                        WorldChunkConstants.ChunkSize,
+                        UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB,
+                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
+                    );
+                    splatmapTex.LoadRawTextureData(data.Splatmap);
                     splatmapTex.Apply();
+                    m_TerrainChunkAssetDataSystem.SetSplatmapTex(data.Sector, splatmapTex);
+
                     cmd.RemoveComponent<TerrainChunkIsSplatmapBakingComponent>(data.Entity);
                     cmd.AddComponent(data.Entity, new TerrainChunkHasSplatmap());
+
+                    // Keep Heightmap, as it's passed to Asset Data system for later use
+                    data.Normalmap.Dispose();
+                    data.Splatmap.Dispose();
+                }
+                else
+                {
+                    // By the time we generated data, system doesn't need it anymore
+                    data.Heightmap.Dispose();
+                    data.Normalmap.Dispose();
+                    data.Splatmap.Dispose();
                 }
 
                 m_DataToUploadOnGPU.RemoveAt(i);
@@ -297,16 +331,15 @@ namespace Unity.InfiniteWorld
             // Update sectors
             if (m_TriggeredSectors.Sectors.Length > 0)
             {
-                var jobHandles = new NativeArray<JobHandle>(m_TriggeredSectors.Sectors.Length, Allocator.TempJob);
                 for (int i = 0, c = m_TriggeredSectors.Sectors.Length; i < c; ++i)
                 {
                     var entity = m_TriggeredSectors.Entities[i];
                     var sector = m_TriggeredSectors.Sectors[i];
-                    var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(sector);
-                    var normalmap = m_TerrainChunkAssetDataSystem.GetChunkNormalmap(sector);
-                    var splatmap = m_TerrainChunkAssetDataSystem.GetChunkSplatmap(sector);
-                    JobHandle thisChunkJob = dependsOn;
+                    var heightmap = new NativeArray<float>(WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize, Allocator.Persistent); 
+                    var normalmap = new NativeArray<byte4>(WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize, Allocator.Persistent);
+                    var splatmap = new NativeArray<byte4>(WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize, Allocator.Persistent);
 
+                    JobHandle thisChunkJob;
                     {
                         //HeightMap
                         var job = new GenerateHeightmapJob
@@ -353,13 +386,12 @@ namespace Unity.InfiniteWorld
                     {
                         Handle = thisChunkJob,
                         Sector = sector,
-                        Entity = entity
+                        Entity = entity,
+                        Heightmap = heightmap,
+                        Normalmap = normalmap,
+                        Splatmap = splatmap
                     });
-
-                    jobHandles[i] = thisChunkJob;
                 }
-                //dependsOn = JobHandle.CombineDependencies(jobHandles);
-                jobHandles.Dispose();
             }
 
             return dependsOn;
