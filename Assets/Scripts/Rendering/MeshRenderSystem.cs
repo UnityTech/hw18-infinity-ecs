@@ -32,7 +32,12 @@ namespace Unity.InfiniteWorld
                 for(int temp = 0; temp < transforms.Length; ++temp)
                 {
                     RenderHelpers.CopyMatrices(transforms, temp, 1, RenderHelpers.matricesArray);
-                    Graphics.DrawMeshInstanced(renderer.mesh, 0, renderer.material, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
+                    if (renderer.materialCount > 0)
+                        Graphics.DrawMeshInstanced(renderer.mesh, 0, renderer.material0, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
+                    if (renderer.materialCount > 1)
+                        Graphics.DrawMeshInstanced(renderer.mesh, 1, renderer.material1, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
+                    if (renderer.materialCount > 2)
+                        Graphics.DrawMeshInstanced(renderer.mesh, 2, renderer.material2, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
 
                 }
 

@@ -27,15 +27,16 @@ namespace Unity.InfiniteWorld
         RandomProvider randomGen = new RandomProvider(12345);
         EntityArchetype vegetationArchetype;
         Mesh testMesh;
-        Material testMaterial;
+        Material[] testMaterials;
 
         protected override void OnCreateManager(int capacity)
         {
             vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
-            var test = Resources.Load<GameObject>("Art/Tree 01");
-            testMesh = test.GetComponent<MeshFilter>().sharedMesh;
-            testMaterial = test.GetComponent<UnityEngine.MeshRenderer>().sharedMaterial;
+            var prefab = Resources.Load<GameObject>("Trees/Pines/Pine_005/Pine_005_01");
+            var lod = prefab.transform.Find("pine_005_01_LOD0");
+            testMesh = lod.GetComponent<MeshFilter>().sharedMesh;
+            testMaterials = lod.GetComponent<MeshRenderer>().sharedMaterials;
         }
 
         protected override void OnUpdate()
@@ -64,7 +65,19 @@ namespace Unity.InfiniteWorld
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector));
             PostUpdateCommands.SetComponent(new Shift(shift));
-            PostUpdateCommands.SetSharedComponent(new MeshRender() { mesh = testMesh, material = testMaterial });
+            var meshRender = new MeshRender()
+            {
+                mesh = testMesh,
+                materialCount = math.min(4, testMaterials.Length)
+            };
+            if (meshRender.materialCount > 0)
+                meshRender.material0 = testMaterials[0];
+            if (meshRender.materialCount > 1)
+                meshRender.material1 = testMaterials[1];
+            if (meshRender.materialCount > 2)
+                meshRender.material2 = testMaterials[2];
+
+            PostUpdateCommands.SetSharedComponent(meshRender);
         }
     }
 }
