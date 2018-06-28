@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: b05f7ae663dabc345bcdf48df06fdc0e
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: DeadPlant3_Var1_LOD0
@@ -134,6 +134,7 @@ ModelImporter:
     4300002: DeadPlant3_Var1_LOD1
     4300004: DeadPlant3_Var1_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -193,6 +194,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

@@ -75,8 +75,8 @@ namespace Unity.InfiniteWorld
             public void Execute(int index)
             {
                 var shift = shifts[index].value;
-                int sectorX = (shift.x > 0.0f) ? (int)(shift.x / WorldChunkConstants.ChunkSize) : -1;
-                int sectorY = (shift.z > 0.0f) ? (int)(shift.z / WorldChunkConstants.ChunkSize) : -1;
+                int sectorX = (shift.x >= 0.0f) ? (int)(shift.x / WorldChunkConstants.ChunkSize) : -1;
+                int sectorY = (shift.z >= 0.0f) ? (int)(shift.z / WorldChunkConstants.ChunkSize) : -1;
                 float shiftX = shift.x - sectorX * WorldChunkConstants.ChunkSize;
                 float shiftZ = shift.z - sectorY * WorldChunkConstants.ChunkSize;
                 sectors[index] = new Sector(sectors[index].value, sectorX, sectorY);

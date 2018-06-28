@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: e61251c91140de44592062993b0428fc
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: Bush_c1_2x2x4_LOD0
     100002: Bush_c1_2x2x4_LOD1
@@ -28,6 +28,7 @@ ModelImporter:
     4300004: Bush_c1_2x2x4_LOD2
     4300006: Bush_c1_2x2x4_COL_PRIM_CAPSULE
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -82,6 +83,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

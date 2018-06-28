@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 0bd7ab8033dbec74d81cf2c0cc4500a4
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: pine_004_02_LOD0
@@ -35,6 +35,7 @@ ModelImporter:
     4300008: pine_004_02_LOD2
     4300010: pine_004_02_LOD3
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -90,6 +91,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

@@ -1,9 +1,7 @@
 fileFormatVersion: 2
 guid: 8b3553073b1cae344beaf2abbb860ea7
-timeCreated: 1502304934
-licenseType: Store
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: pine_004_U_LOD0
@@ -18,6 +16,7 @@ ModelImporter:
     4300000: pine_004_U_LOD0
     4300002: pine_004_U_LOD1
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -31,7 +30,6 @@ ModelImporter:
     second: {fileID: 2100000, guid: 9904b27c50fd5674f805a907a5c260de, type: 2}
   materials:
     importMaterials: 1
-    autoMapExternalMaterials: 1
     materialName: 1
     materialSearch: 1
     materialLocation: 0
@@ -48,6 +46,7 @@ ModelImporter:
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
+    importConstraints: 0
     animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
@@ -74,12 +73,15 @@ ModelImporter:
     optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

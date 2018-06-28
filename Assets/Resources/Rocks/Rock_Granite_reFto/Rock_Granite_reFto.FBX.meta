@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: a3b67c633ea8b394a945414d290b8f51
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: Rock_Granite_reFto_Collider
@@ -32,6 +32,7 @@ ModelImporter:
     4300006: Rock_Granite_reFto_LOD0
     4300008: Rock_Granite_reFto_Collider
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -87,6 +88,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

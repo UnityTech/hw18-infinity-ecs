@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 85f22c00f2e8ad349a815965a35e6ee4
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: ForestBackdrop_A_Plane
@@ -11,6 +11,7 @@ ModelImporter:
     2300000: ForestBackdrop_A_Plane
     3300000: ForestBackdrop_A_Plane
     4300000: ForestBackdrop_A_Plane
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -62,6 +63,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

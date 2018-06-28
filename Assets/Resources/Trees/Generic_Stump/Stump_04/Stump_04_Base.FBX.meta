@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: cf7d52267a592d547b768ee0f484666f
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: Stump_04_LOD0
@@ -22,6 +22,7 @@ ModelImporter:
     4300002: Stump_04_LOD1
     4300004: Stump_04_COL
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -75,6 +76,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

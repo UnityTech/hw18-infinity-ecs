@@ -29,16 +29,16 @@ namespace Unity.InfiniteWorld
                 var renderer = cacheduniqueRendererTypes[i];
                 var transforms = renderGroup.GetComponentDataArray<Transform>(forEachFilter, i);
 
+                if (renderer.mesh == null)
+                    continue;
+
                 for(int temp = 0; temp < transforms.Length; ++temp)
                 {
                     RenderHelpers.CopyMatrices(transforms, temp, 1, RenderHelpers.matricesArray);
-                    if (renderer.materialCount > 0)
-                        Graphics.DrawMeshInstanced(renderer.mesh, 0, renderer.material0, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
-                    if (renderer.materialCount > 1)
-                        Graphics.DrawMeshInstanced(renderer.mesh, 1, renderer.material1, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
-                    if (renderer.materialCount > 2)
-                        Graphics.DrawMeshInstanced(renderer.mesh, 2, renderer.material2, RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
 
+                    var materials = new Material[]{ renderer.material0, renderer.material1, renderer.material2 };
+                    for (int subpart = 0; subpart < renderer.materialCount; ++subpart)
+                        Graphics.DrawMeshInstanced(renderer.mesh, subpart, materials[subpart], RenderHelpers.matricesArray, 1, null, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
                 }
 
                 /*

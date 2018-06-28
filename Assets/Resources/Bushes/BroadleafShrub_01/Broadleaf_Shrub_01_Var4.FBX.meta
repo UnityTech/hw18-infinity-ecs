@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: cdd3ef14f8a55394a9a3e6b0a8d2bb81
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: Broadleaf_Shrub_1_Var4
     100002: //RootNode
@@ -28,6 +28,7 @@ ModelImporter:
     4300002: Broadleaf_Shrub_1_Var4_LOD1
     4300004: Broadleaf_Shrub_1_Var4_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -82,6 +83,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: bee20369cb0cae542bd836c324385660
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: Fern_var03_Lod0
@@ -51,6 +51,7 @@ ModelImporter:
     4300014: Fern_Var3_LOD1
     4300016: Fern_Var3_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -110,6 +111,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

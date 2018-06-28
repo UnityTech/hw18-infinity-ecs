@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: c2f2a6f3a8e0ff5428892908e45ecd86
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: Juniper_Bush_01_Var4_LOD0
@@ -22,6 +22,7 @@ ModelImporter:
     4300002: Juniper_Bush_01_Var4_LOD1
     4300004: Juniper_Bush_01_Var4_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -81,6 +82,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

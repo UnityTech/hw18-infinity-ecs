@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 17a1f3e386c042e49b8740e4c4da556a
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: Bush_b1_4x4x4_COL_PRIM_CAPSULE
     100002: Bush_b1_4x4x4_LOD0
@@ -27,6 +27,7 @@ ModelImporter:
     4300006: Bush_b1_4x4x4_LOD1
     13600000: Bush_b1_4x4x4_COL_PRIM_CAPSULE
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -91,6 +92,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

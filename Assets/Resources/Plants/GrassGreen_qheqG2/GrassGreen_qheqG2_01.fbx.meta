@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 227c05b8e9fed604b9904272bdfda94b
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: GrassGreen01_LOD0
     100002: GrassGreen01_LOD1
@@ -23,6 +23,7 @@ ModelImporter:
     4300002: GrassGreen01_LOD1
     4300004: GrassGreen01_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -87,6 +88,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

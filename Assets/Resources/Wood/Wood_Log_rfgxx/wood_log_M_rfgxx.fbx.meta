@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: af88e8d01a5b34442898a6f2cc1d33e4
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: wood_log_M_rfgxx_LOD0
@@ -27,6 +27,7 @@ ModelImporter:
     4300004: wood_log_M_rfgxx_LOD2
     4300006: wood_log_M_rfgxx_LOD3
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -82,6 +83,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

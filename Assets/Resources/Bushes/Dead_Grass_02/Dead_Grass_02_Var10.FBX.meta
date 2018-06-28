@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 367ead112e59c6045a9466b9d59d2c6e
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     100002: Dead_Grass_2_Var10_LOD0
@@ -21,6 +21,7 @@ ModelImporter:
     4300002: Dead_Grass_2_Var10_LOD1
     4300004: Dead_Grass_2_Var10_LOD2
     20500000: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -80,6 +81,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

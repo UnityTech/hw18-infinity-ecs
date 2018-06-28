@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 071b49e04a844bc4eb52a1f30e0ac362
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: Aset_rock_granite_M_rgAsy_LOD0
     100002: //RootNode
@@ -41,6 +41,7 @@ ModelImporter:
     4300010: Rock_Granite_rcCwC_LOD4
     20500000: //RootNode
     20500002: //RootNode
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -107,6 +108,8 @@ ModelImporter:
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
