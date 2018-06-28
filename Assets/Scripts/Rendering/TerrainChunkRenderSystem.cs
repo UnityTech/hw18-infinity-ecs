@@ -13,11 +13,11 @@ namespace Unity.InfiniteWorld
     [UpdateAfter(typeof(TerrainGenerationSystem))]
     public class TerrainChunkRenderSystem : ComponentSystem
     {
-        public static readonly int _Heightmap = Shader.PropertyToID("_Heightmap");
-        public static readonly int _Normalmap = Shader.PropertyToID("_Normalmap");
-        public static readonly int _Splatmap = Shader.PropertyToID("_Splatmap");
+        public static readonly int _HeightMap0 = Shader.PropertyToID("_HeightMap0");
+        public static readonly int _NormalMap0 = Shader.PropertyToID("_NormalMap0");
+        public static readonly int _LayerMaskMap = Shader.PropertyToID("_LayerMaskMap");
         public static readonly int _Sector = Shader.PropertyToID("_Sector");
-        public static readonly int _HeightmapScale = Shader.PropertyToID("_HeightmapScale");
+        public static readonly int _HeightAmplitude0 = Shader.PropertyToID("_HeightAmplitude0");
 
         // Universal material & mesh for all chunks
         Mesh gridMesh;
@@ -59,11 +59,11 @@ namespace Unity.InfiniteWorld
                 var heightmap = chunkAssets.GetHeightmapTex(sector);
                 var normalmap = chunkAssets.GetNormalmapTex(sector);
                 var splatmap = chunkAssets.GetSplatmapTex(sector);
-                materialBlock.SetTexture(_Heightmap, heightmap);
-                materialBlock.SetTexture(_Normalmap, normalmap);
-                materialBlock.SetTexture(_Splatmap, splatmap);
+                materialBlock.SetTexture(_HeightMap0, heightmap);
+                materialBlock.SetTexture(_NormalMap0, normalmap);
+                materialBlock.SetTexture(_LayerMaskMap, splatmap);
                 materialBlock.SetVector(_Sector, new Vector4(sector.value.x, sector.value.y, 0, 0));
-                materialBlock.SetFloat(_HeightmapScale, WorldChunkConstants.TerrainHeightScale);
+                materialBlock.SetFloat(_HeightAmplitude0, WorldChunkConstants.TerrainHeightScale);
                 RenderHelpers.CopyMatrices(terrainDataGroup.transforms, index, 1, RenderHelpers.matricesArray);
                 Graphics.DrawMeshInstanced(gridMesh, 0, material, RenderHelpers.matricesArray, 1, materialBlock, /*castShadows*/ShadowCastingMode.On, /*receiveShadows*/true);
             }
