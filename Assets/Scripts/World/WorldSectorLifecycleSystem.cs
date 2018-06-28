@@ -44,7 +44,6 @@ namespace Unity.InfiniteWorld
                 (int2 sector) => { }, 
                 (int index, int2 sector) => 
                     {
-                        Debug.Log("KILL: " + sector.x + ":" + sector.y);
                         PostUpdateCommands.DestroyEntity(objectsFilter.entities[index]);
                     }
             );
@@ -56,8 +55,6 @@ namespace Unity.InfiniteWorld
                 ref objectsFilter.sectors,
                 (int2 sector) =>
                     {
-                        Debug.Log("CREATE: " + sector.x + ":" + sector.y);
-
                         PostUpdateCommands.CreateEntity(archetype);
                         PostUpdateCommands.SetComponent(new Sector(sector));
 

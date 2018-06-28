@@ -13,133 +13,133 @@ namespace Unity.InfiniteWorld
         struct AssetData
         {
             public NativeArray<float> Heightmap;
+
             public Texture2D HeightmapTex;
-
-            public NativeArray<float4> Normalmap;
             public Texture2D NormalmapTex;
-
-            public NativeArray<float4> Splatmap;
             public Texture2D SplatmapTex;
         }
 
-        Dictionary<int2, AssetData> m_CPUDataBySector;
+        Dictionary<int2, AssetData> sectorData;
 
-        List<int> m_FreedIndices;
-        int m_NextIndex;
-
-        //HeightMap
-        public NativeArray<float> GetChunkHeightmap(Sector sector)
+        public bool IsHeightmapReady(int2 sector)
         {
-            return GetOrCreateChunkAssetData(sector).Heightmap;
+            return sectorData.ContainsKey(sector);
+        }
+        public bool IsHeightmapReady(Sector sector)
+        {
+            return IsHeightmapReady(sector.value);
         }
 
-        public Texture2D GetChunkHeightmapTex(Sector sector)
+        public bool GetHeightmap(Sector sector, out NativeArray<float> heightmap)
         {
-            return GetOrCreateChunkAssetData(sector).HeightmapTex;
-        }
-        //NormalMap
-        public NativeArray<float4> GetChunkNormalmap(Sector sector)
-        {
-            return GetOrCreateChunkAssetData(sector).Normalmap;
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+            {
+                heightmap = asset.Heightmap;
+                return false;
+            }
+
+            heightmap = asset.Heightmap;
+            return true;
         }
 
-        public Texture2D GetChunkNormalmapTex(Sector sector)
+        public Texture2D GetHeightmapTex(Sector sector)
         {
-            return GetOrCreateChunkAssetData(sector).NormalmapTex;
-        }
-        //SplatMap
-        public NativeArray<float4> GetChunkSplatmap(Sector sector)
-        {
-            return GetOrCreateChunkAssetData(sector).Splatmap;
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+                return null;
+
+            return asset.HeightmapTex;
         }
 
-        public Texture2D GetChunkSplatmapTex(Sector sector)
+        public Texture2D GetNormalmapTex(Sector sector)
         {
-            return GetOrCreateChunkAssetData(sector).SplatmapTex;
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+                return null;
+
+            return asset.NormalmapTex;
+        }
+        public void SetNormalmapTex(Sector sector, Texture2D normalmap)
+        {
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+            {
+                Debug.Log("ERROR: Setting splat map for unregistered sector");
+                return;
+            }
+
+            asset.NormalmapTex = normalmap;
+            sectorData[sector.value] = asset;
         }
 
-        public void DisposeChunkData(Sector sector)
+        public Texture2D GetSplatmapTex(Sector sector)
         {
-            if (m_CPUDataBySector.TryGetValue(sector.value, out AssetData asset))
-                Dispose(asset);
-            m_CPUDataBySector.Remove(sector.value);
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+                return null;
+
+            return asset.SplatmapTex;
+        }
+        public void SetSplatmapTex(Sector sector, Texture2D splatmap)
+        {
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+            {
+                Debug.Log("ERROR: Setting splat map for unregistered sector");
+                return;
+            }
+
+            asset.SplatmapTex = splatmap;
+            sectorData[sector.value] = asset;
+        }
+
+        public void AddSector(Sector sector, NativeArray<float> heightmap, Texture2D heightmapTex)
+        {
+            AssetData asset;
+            asset.Heightmap = heightmap;
+            asset.HeightmapTex = heightmapTex;
+            asset.NormalmapTex = null;
+            asset.SplatmapTex = null;
+            sectorData.Add(sector.value, asset);
+        }
+
+        public void DisposeSector(Sector sector)
+        {
+            AssetData asset;
+            if (!sectorData.TryGetValue(sector.value, out asset))
+                return;
+
+            DisposeData(asset);
+
+            sectorData.Remove(sector.value);
+        }
+        private void DisposeData(AssetData asset)
+        {
+            asset.Heightmap.Dispose();
+            UnityEngine.Object.Destroy(asset.HeightmapTex);
+            if (asset.NormalmapTex)
+                UnityEngine.Object.Destroy(asset.NormalmapTex);
+            if (asset.SplatmapTex)
+                UnityEngine.Object.Destroy(asset.SplatmapTex);
         }
 
         protected override void OnCreateManager(int capacity)
         {
-            m_CPUDataBySector = new Dictionary<int2, AssetData>();
-            m_FreedIndices = new List<int>();
-            m_NextIndex = 0;
+            sectorData = new Dictionary<int2, AssetData>();
         }
 
         protected override void OnDestroyManager()
         {
-            foreach (var assets in m_CPUDataBySector)
-                Dispose(assets.Value);
-            m_CPUDataBySector.Clear();
-            m_CPUDataBySector = null;
-            m_FreedIndices = null;
+            foreach (var asset in sectorData)
+                DisposeData(asset.Value);
+
+            sectorData.Clear();
+            sectorData = null;
         }
 
         protected override void OnUpdate()
         {
-        }
-
-        AssetData GetOrCreateChunkAssetData(Sector sector)
-        {
-            if (!m_CPUDataBySector.TryGetValue(sector.value, out AssetData asset))
-            {
-                asset = new AssetData
-                {
-                    Heightmap = new NativeArray<float>(
-                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                        Allocator.Persistent
-                    ),
-                    HeightmapTex = new Texture2D(
-                        WorldChunkConstants.ChunkSize,
-                        WorldChunkConstants.ChunkSize,
-                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32_SFloat,
-                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    ),
-
-                    Normalmap = new NativeArray<float4>(
-                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                        Allocator.Persistent
-                    ),
-                    NormalmapTex = new Texture2D(
-                        WorldChunkConstants.ChunkSize,
-                        WorldChunkConstants.ChunkSize,
-                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
-                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    ),
-
-                    Splatmap = new NativeArray<float4>(
-                        WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
-                        Allocator.Persistent
-                    ),
-                    SplatmapTex = new Texture2D(
-                        WorldChunkConstants.ChunkSize,
-                        WorldChunkConstants.ChunkSize,
-                        UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat,
-                        UnityEngine.Experimental.Rendering.TextureCreationFlags.None
-                    )
-
-                };
-                asset.HeightmapTex.wrapMode = TextureWrapMode.Clamp;
-                m_CPUDataBySector.Add(sector.value, asset);
-            }
-
-            return asset;
-        }
-
-        void Dispose(AssetData data)
-        {
-            data.Heightmap.Dispose();
-            UnityEngine.Object.Destroy(data.HeightmapTex);
-            data.Normalmap.Dispose();
-            UnityEngine.Object.Destroy(data.NormalmapTex);
-            data.Splatmap.Dispose();
-            UnityEngine.Object.Destroy(data.SplatmapTex);
         }
     }
 }

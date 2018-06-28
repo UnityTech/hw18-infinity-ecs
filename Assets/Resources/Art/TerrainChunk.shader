@@ -113,6 +113,7 @@ Shader "Custom/TerrainChunk"
 			float4 tSpace2 : TEXCOORD3;
 			UNITY_VERTEX_INPUT_INSTANCE_ID
 			UNITY_VERTEX_OUTPUT_STEREO
+			UNITY_FOG_COORDS_PACKED(4, half4) // x: fogCoord, yzw: reflectVec
 		};
 
 		void materialLayer(
