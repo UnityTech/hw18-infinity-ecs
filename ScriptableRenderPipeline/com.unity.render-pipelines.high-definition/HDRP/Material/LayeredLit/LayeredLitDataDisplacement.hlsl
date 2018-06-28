@@ -124,7 +124,6 @@ float ComputePerPixelHeightDisplacement(float2 texOffsetCurrent, float lod, PerP
     // See function ComputePerVertexDisplacement() for comment about the weights/influenceMask/BlendMask
 
     // Note: Amplitude is handled in uvSpaceScale, no need to multiply by it here.
-    float baseHeight = SAMPLE_TEXTURE2D_LOD(_HeightMap, SAMPLER_HEIGHTMAP_IDX, param.uv[0] + texOffsetCurrent, lod).r;
     float height0 = SAMPLE_TEXTURE2D_LOD(_HeightMap0, SAMPLER_HEIGHTMAP_IDX, param.uv[0] + texOffsetCurrent * param.uvSpaceScale[0], lod).r;
     float height1 = SAMPLE_TEXTURE2D_LOD(_HeightMap1, SAMPLER_HEIGHTMAP_IDX, param.uv[1] + texOffsetCurrent * param.uvSpaceScale[1], lod).r;
     float height2 = SAMPLE_TEXTURE2D_LOD(_HeightMap2, SAMPLER_HEIGHTMAP_IDX, param.uv[2] + texOffsetCurrent * param.uvSpaceScale[2], lod).r;
@@ -151,7 +150,7 @@ float ComputePerPixelHeightDisplacement(float2 texOffsetCurrent, float lod, PerP
     height3 += height0 * _InheritBaseHeight3 * influenceMask;
 #endif
 
-    return baseHeight * _HeightmapScale + BlendLayeredScalar(height0, height1, height2, height3, weights);
+    return BlendLayeredScalar(height0, height1, height2, height3, weights);
 }
 
 #include "CoreRP/ShaderLibrary/PerPixelDisplacement.hlsl"
@@ -304,6 +303,7 @@ float ApplyPerPixelDisplacement(FragInputs input, float3 V, inout LayerTexCoord 
 float3 ComputePerVertexDisplacement(LayerTexCoord layerTexCoord, float4 vertexColor, float lod)
 {
 #if LAYERS_HEIGHTMAP_ENABLE
+    float baseHeight = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base0, lod).r - _HeightCenter0) * _HeightmapScale;
     float height0 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap0, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base0, lod).r - _HeightCenter0) * _HeightAmplitude0;
     float height1 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap1, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base1, lod).r - _HeightCenter1) * _HeightAmplitude1;
     float height2 = (SAMPLE_UVMAPPING_TEXTURE2D_LOD(_HeightMap2, SAMPLER_HEIGHTMAP_IDX, layerTexCoord.base2, lod).r - _HeightCenter2) * _HeightAmplitude2;
@@ -348,12 +348,12 @@ float3 ComputePerVertexDisplacement(LayerTexCoord layerTexCoord, float4 vertexCo
     float3 objectScale = GetDisplacementObjectScale(true);
     // Reminder: mappingType is know statically, so code below is optimize by the compiler
     // Planar and Triplanar are in world space thus it is independent of object scale
-    return heightResult.xxx * BlendLayeredVector3( ((layerTexCoord.base0.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
+    return baseHeight + heightResult.xxx * BlendLayeredVector3( ((layerTexCoord.base0.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base1.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base2.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)),
                                                    ((layerTexCoord.base3.mappingType == UV_MAPPING_UVSET) ? objectScale : float3(1.0, 1.0, 1.0)), weights);
     #else
-    return heightResult.xxx;
+    return baseHeight + heightResult.xxx;
     #endif
 #else
     return float3(0.0, 0.0, 0.0);

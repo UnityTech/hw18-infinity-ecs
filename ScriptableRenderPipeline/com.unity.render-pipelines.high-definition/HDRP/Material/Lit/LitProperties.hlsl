@@ -10,6 +10,9 @@ SAMPLER(sampler_DistortionVectorMap);
 TEXTURE2D(_EmissiveColorMap);
 SAMPLER(sampler_EmissiveColorMap);
 
+TEXTURE2D(_HeightMap);
+SAMPLER(sampler_HeightMap);
+
 #ifndef LAYERED_LIT_SHADER
 
 TEXTURE2D(_DiffuseLightingMap);
@@ -31,8 +34,8 @@ SAMPLER(sampler_NormalMapOS);
 TEXTURE2D(_DetailMap);
 SAMPLER(sampler_DetailMap);
 
-TEXTURE2D(_HeightMap);
-SAMPLER(sampler_HeightMap);
+//TEXTURE2D(_HeightMap);
+//SAMPLER(sampler_HeightMap);
 
 TEXTURE2D(_TangentMap);
 SAMPLER(sampler_TangentMap);
@@ -149,6 +152,8 @@ float _EnableGeometricSpecularAA;
 float _SpecularAAScreenSpaceVariance;
 float _SpecularAAThreshold;
 
+float _HeightmapScale;
+
 #ifndef LAYERED_LIT_SHADER
 
 // Set of users variables
@@ -175,7 +180,6 @@ float4 _HeightMap_TexelSize; // Unity facility. This will provide the size of th
 
 float _HeightAmplitude;
 float _HeightCenter;
-float _HeightmapScale;
 
 float _Anisotropy;
 
