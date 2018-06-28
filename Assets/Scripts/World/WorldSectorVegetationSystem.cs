@@ -31,7 +31,7 @@ namespace Unity.InfiniteWorld
 
         protected override void OnCreateManager(int capacity)
         {
-            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
+            vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Rotation), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
             var prefab = Resources.Load<GameObject>("Trees/Pines/Pine_005/Pine_005_01");
             var lod = prefab.transform.Find("pine_005_01_LOD0");
@@ -44,6 +44,7 @@ namespace Unity.InfiniteWorld
             for (int temp = 0; temp < eventsFilter.events.Length; ++temp)
             {
                 var sector = eventsFilter.events[temp].sector;
+                randomGen.seed = (uint)((sector.x + 1024) * 1048576 + sector.y);
 
                 NativeArray<float> heightMap;
                 if (dataSystem.GetHeightmap(new Sector(sector), out heightMap))
@@ -59,12 +60,21 @@ namespace Unity.InfiniteWorld
 
         protected void CreateEntity(int2 sector, NativeArray<float> heightMap)
         {
-            var rand = new int2((int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize), (int)(UnityEngine.Random.value * WorldChunkConstants.ChunkSize));
-            Vector3 shift = new Vector3(rand.x, heightMap[(rand.y * WorldChunkConstants.ChunkSize + rand.x)] * WorldChunkConstants.TerrainHeightScale, rand.y);
+            float posX = randomGen.Uniform(0, WorldChunkConstants.ChunkSize - 1);
+            float posZ = randomGen.Uniform(0, WorldChunkConstants.ChunkSize - 1);
+            int index = ((int)(posZ) * WorldChunkConstants.ChunkSize + (int)(posX));
+
+            float3 shift = new float3(posX, heightMap[index] * WorldChunkConstants.TerrainHeightScale, posZ);
+
+            float rotation = randomGen.Uniform(Mathf.PI);
+            float sina, cosa;
+            math.sincos(0.5f * rotation, out sina, out cosa);
+            var q = new quaternion(0.0f, sina, 0.0f, cosa);
 
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector));
             PostUpdateCommands.SetComponent(new Shift(shift));
+            PostUpdateCommands.SetComponent(new Rotation(q));
             var meshRender = new MeshRender()
             {
                 mesh = testMesh,

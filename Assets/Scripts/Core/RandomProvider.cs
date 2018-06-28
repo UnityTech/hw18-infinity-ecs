@@ -2,7 +2,7 @@
 {
     public struct RandomProvider
     {
-        uint seed;
+        public uint seed;
 
         public RandomProvider(uint initialSeed)
         {
