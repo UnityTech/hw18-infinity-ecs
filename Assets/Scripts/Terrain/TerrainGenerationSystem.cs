@@ -265,6 +265,8 @@ namespace Unity.InfiniteWorld
                     Profiler.BeginSample("Update Sector");
                     data.Handle.Complete();
                     //HeightMap
+                    m_TerrainChunkAssetDataSystem.SetHeightmapReady(data.Sector);
+
                     var heightmap = m_TerrainChunkAssetDataSystem.GetChunkHeightmap(data.Sector);
                     var heightmapTex = m_TerrainChunkAssetDataSystem.GetChunkHeightmapTex(data.Sector);
                     heightmapTex.LoadRawTextureData(heightmap);

@@ -40,13 +40,19 @@ namespace Unity.InfiniteWorld
 
         protected override void OnUpdate()
         {
-            for(int temp = 0; temp < eventsFilter.events.Length; ++temp)
+            for (int temp = 0; temp < eventsFilter.events.Length; ++temp)
             {
-                // Just create 10 trees in random position inside a sector
-                for (int i = 0; i < 150; ++i)
-                    CreateEntity(new Sector(eventsFilter.events[temp].sector));
+                var sector = eventsFilter.events[temp].sector;
+                if (dataSystem.IsHeightmapReady(sector))
+                {
+                    // Just create 150 trees in random position inside a sector
+                    for (int i = 0; i < 150; ++i)
+                    {
+                        CreateEntity(new Sector(sector));
+                    }
 
-                PostUpdateCommands.DestroyEntity(eventsFilter.entities[temp]);
+                    PostUpdateCommands.DestroyEntity(eventsFilter.entities[temp]);
+                }
             }
         }
 

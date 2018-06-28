@@ -14,6 +14,7 @@ namespace Unity.InfiniteWorld
         {
             public NativeArray<float> Heightmap;
             public Texture2D HeightmapTex;
+            public bool HeightmapReady;
 
             public NativeArray<float4> Normalmap;
             public Texture2D NormalmapTex;
@@ -37,6 +38,27 @@ namespace Unity.InfiniteWorld
         {
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
         }
+
+        public bool IsHeightmapReady(Sector sector)
+        {
+            return IsHeightmapReady(sector.value);
+        }
+
+        public bool IsHeightmapReady(int2 sector)
+        {
+            if (!m_CPUDataBySector.TryGetValue(sector, out AssetData asset))
+                return false;
+            return asset.HeightmapReady;
+        }
+
+        public void SetHeightmapReady(Sector sector)
+        {
+            GetOrCreateChunkAssetData(sector);
+            var asset = m_CPUDataBySector[sector.value];
+            asset.HeightmapReady = true;
+            m_CPUDataBySector[sector.value] = asset;
+        }
+
         //NormalMap
         public NativeArray<float4> GetChunkNormalmap(Sector sector)
         {
@@ -101,6 +123,7 @@ namespace Unity.InfiniteWorld
                         UnityEngine.Experimental.Rendering.GraphicsFormat.R32_SFloat,
                         UnityEngine.Experimental.Rendering.TextureCreationFlags.None
                     ),
+                    HeightmapReady = false,
 
                     Normalmap = new NativeArray<float4>(
                         WorldChunkConstants.ChunkSize * WorldChunkConstants.ChunkSize,
