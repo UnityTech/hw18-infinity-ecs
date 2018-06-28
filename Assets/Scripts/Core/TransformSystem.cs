@@ -66,6 +66,7 @@ namespace Unity.InfiniteWorld
         [Inject]
         CameraSystem camera;
 
+        [BurstCompile]
         struct ShiftSectorUpdateJob: IJobParallelFor
         {
             public ComponentDataArray<Shift> shifts;

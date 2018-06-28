@@ -3,6 +3,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Burst;
+
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -118,6 +120,7 @@ namespace Unity.InfiniteWorld
             return height;
         }
 
+        [BurstCompile]
         struct GenerateHeightmapJob : IJobParallelFor
         {
             [ReadOnly] public Sector Sector;
@@ -129,6 +132,7 @@ namespace Unity.InfiniteWorld
             }
         }
 
+        [BurstCompile]
         struct GenerateNormalmapJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<float> Heightmap;
@@ -160,6 +164,7 @@ namespace Unity.InfiniteWorld
             }
         }
 
+        [BurstCompile]
         struct GenerateSplatmapJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<float> Heightmap;
