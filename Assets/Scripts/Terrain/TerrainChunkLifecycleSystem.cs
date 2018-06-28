@@ -102,9 +102,6 @@ namespace Unity.InfiniteWorld
                 comparer.baseSector = cameraSector;
                 toCreate.Sort(comparer);
 
-                Debug.Log(toCreate[0]);
-                Debug.Log(cameraSector);
-
                 foreach (int2 xy in toCreate)
                 {
                     var entity = EntityManager.CreateEntity(archetype);

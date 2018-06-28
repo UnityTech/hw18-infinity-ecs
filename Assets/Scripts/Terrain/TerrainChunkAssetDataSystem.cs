@@ -34,6 +34,11 @@ namespace Unity.InfiniteWorld
             return GetOrCreateChunkAssetData(sector).Heightmap;
         }
 
+        public NativeArray<float> GetChunkHeightmap(int2 sector)
+        {
+            return GetOrCreateChunkAssetData(sector).Heightmap;
+        }
+
         public Texture2D GetChunkHeightmapTex(Sector sector)
         {
             return GetOrCreateChunkAssetData(sector).HeightmapTex;
@@ -109,7 +114,12 @@ namespace Unity.InfiniteWorld
 
         AssetData GetOrCreateChunkAssetData(Sector sector)
         {
-            if (!m_CPUDataBySector.TryGetValue(sector.value, out AssetData asset))
+            return GetOrCreateChunkAssetData(sector.value);
+        }
+
+        AssetData GetOrCreateChunkAssetData(int2 sector)
+        {
+            if (!m_CPUDataBySector.TryGetValue(sector, out AssetData asset))
             {
                 asset = new AssetData
                 {
@@ -149,7 +159,7 @@ namespace Unity.InfiniteWorld
 
                 };
                 asset.HeightmapTex.wrapMode = TextureWrapMode.Clamp;
-                m_CPUDataBySector.Add(sector.value, asset);
+                m_CPUDataBySector.Add(sector, asset);
             }
 
             return asset;
