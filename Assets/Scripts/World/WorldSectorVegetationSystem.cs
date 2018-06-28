@@ -26,17 +26,37 @@ namespace Unity.InfiniteWorld
 
         RandomProvider randomGen = new RandomProvider(12345);
         EntityArchetype vegetationArchetype;
-        Mesh testMesh;
-        Material[] testMaterials;
+
+        struct VegetationModel
+        {
+            public Mesh mesh;
+            public Material[] materials;
+        }
+
+        VegetationModel[] models;
 
         protected override void OnCreateManager(int capacity)
         {
             vegetationArchetype = EntityManager.CreateArchetype(typeof(Sector), typeof(Shift), typeof(Rotation), typeof(Scale), typeof(Transform), typeof(MeshRender), typeof(WorldSectorObject));
 
-            var prefab = Resources.Load<GameObject>("Trees/Pines/Pine_005/Pine_005_01");
-            var lod = prefab.transform.Find("pine_005_01_LOD0");
-            testMesh = lod.GetComponent<MeshFilter>().sharedMesh;
-            testMaterials = lod.GetComponent<MeshRenderer>().sharedMaterials;
+            var prefabNames = new string[]{
+                "Trees/Pines/Pine_005/Pine_005_01"
+            };
+            var lodNames = new string[]{
+                "pine_005_01_LOD0"
+            };
+
+            models = new VegetationModel[lodNames.Length];
+            for (int i = 0; i < lodNames.Length; ++i)
+            {
+                var prefab = Resources.Load<GameObject>(prefabNames[i]);
+                var lod = prefab.transform.Find(lodNames[i]);
+                models[i] = new VegetationModel()
+                {
+                    mesh = lod.GetComponent<MeshFilter>().sharedMesh,
+                    materials = lod.GetComponent<MeshRenderer>().sharedMaterials
+                };
+            }
         }
 
         protected override void OnUpdate()
@@ -81,6 +101,8 @@ namespace Unity.InfiniteWorld
             float sz = randomGen.Uniform(0.4f) + 0.8f;
             float3 scale = new float3(sx, sy, sz);
 
+            uint modelIndex = randomGen.Uniform(0, (uint)models.Length - 1);
+
             PostUpdateCommands.CreateEntity(vegetationArchetype);
             PostUpdateCommands.SetComponent(new Sector(sector));
             PostUpdateCommands.SetComponent(new Shift(shift));
@@ -88,15 +110,15 @@ namespace Unity.InfiniteWorld
             PostUpdateCommands.SetComponent(new Scale(scale));
             var meshRender = new MeshRender()
             {
-                mesh = testMesh,
-                materialCount = math.min(4, testMaterials.Length)
+                mesh = models[modelIndex].mesh,
+                materialCount = math.min(4, models[modelIndex].materials.Length)
             };
             if (meshRender.materialCount > 0)
-                meshRender.material0 = testMaterials[0];
+                meshRender.material0 = models[modelIndex].materials[0];
             if (meshRender.materialCount > 1)
-                meshRender.material1 = testMaterials[1];
+                meshRender.material1 = models[modelIndex].materials[1];
             if (meshRender.materialCount > 2)
-                meshRender.material2 = testMaterials[2];
+                meshRender.material2 = models[modelIndex].materials[2];
 
             PostUpdateCommands.SetSharedComponent(meshRender);
         }
