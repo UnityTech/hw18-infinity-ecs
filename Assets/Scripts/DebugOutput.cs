@@ -27,7 +27,7 @@ namespace Unity.InfiniteWorld
             float3 truePos = new float3(sector.value.x * WorldChunkConstants.ChunkSize, 0, sector.value.y * WorldChunkConstants.ChunkSize) + shift.value;
 
             StringBuilder builder = new StringBuilder();
-            builder.AppendFormat("ENTITIES {0:D6} \n COORDINATES: {1:F1}:{2:F1}:{3:F1}", count, truePos.x, truePos.y, truePos.z);
+            builder.AppendFormat("ENTITIES {0:D6} \n COORDINATES: X:{1:F1} Y:{2:F1} Z:{3:F1}", count, truePos.x, truePos.y, truePos.z);
 
             debugText.text = builder.ToString();
         }

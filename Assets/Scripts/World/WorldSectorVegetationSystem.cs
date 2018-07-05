@@ -45,20 +45,19 @@ namespace Unity.InfiniteWorld
                 "Trees/Pines/Pine_002_new/Pine_002_S2", // thick
                 "Trees/Pines/Pine_002_new/Pine_002_XL", // large
                 "Trees/Pines/Pine_002_new/Pine_002_XXL", // large
-                "Bushes/RedBush/RedBush_Var1",
-                "Assets/Resources/Trees/Tree_Dead_001/tree_dead_001",
                 "Trees/Pines/Pine_005/Pine_005_01"
             };
             var lodNames = new string[]{
                 "S2_LOD0",
                 "XL_LOD0",
                 "XXL_LOD0",
-                "RedBush_Var1_LOD0",
-                "tree_dead_LOD0",
                 "pine_005_01_LOD0"
             };
             var probabilities = new float[]{
-                10.0f
+                30.0f,
+                2.0f,
+                2.0f,
+                3.0f
             };
 
             totalProbability = 0.0f;
@@ -66,7 +65,18 @@ namespace Unity.InfiniteWorld
             for (int i = 0; i < lodNames.Length; ++i)
             {
                 var prefab = Resources.Load<GameObject>(prefabNames[i]);
+                if (prefab == null)
+                {
+                    Debug.Log("Can't find asset: " + prefabNames[i]);
+                    continue;
+                }
+
                 var lod = prefab.transform.Find(lodNames[i]);
+                if (lod == null)
+                {
+                    Debug.Log("Can't find lod: " + lodNames[i] + " for " + prefabNames[i]);
+                    continue;
+                }
                 models[i] = new VegetationModel()
                 {
                     mesh = lod.GetComponent<MeshFilter>().sharedMesh,
@@ -87,8 +97,8 @@ namespace Unity.InfiniteWorld
                 NativeArray<float> heightMap;
                 if (dataSystem.GetHeightmap(new Sector(sector), out heightMap))
                 {
-                    // Just create 150 trees in random position inside a sector
-                    for (int i = 0; i < 150; ++i)
+                    // Just create XXX trees in random position inside a sector
+                    for (int i = 0; i < 200; ++i)
                         CreateEntity(sector, heightMap);
 
                     PostUpdateCommands.DestroyEntity(eventsFilter.entities[temp]);
